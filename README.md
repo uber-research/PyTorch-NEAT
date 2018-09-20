@@ -79,4 +79,4 @@ python3 -m examples.adaptive.main
 
 PyTorch NEAT is extended from Python NEAT by Alex Gajewsky.
 
-Questions can be directed to (joel.lehman@uber.com)[mailto:joel.lehman@uber.com].
+Questions can be directed to joel.lehman@uber.com.
