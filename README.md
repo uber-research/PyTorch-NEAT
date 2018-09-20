@@ -74,3 +74,9 @@ And a simple example using Adaptive HyperNEAT to partially solve a T-maze can be
 ```
 python3 -m examples.adaptive.main
 ```
+
+## Author / Support
+
+PyTorch NEAT is extended from Python NEAT by Alex Gajewsky.
+
+Questions can be directed to (joel.lehman@uber.com)[mailto:joel.lehman@uber.com].
