@@ -13,7 +13,7 @@ We also provide some environments in which to test NEAT and Adaptive HyperNEAT, 
 
 ## Examples
 The following snippet turns a NEAT-Python genome into a recurrent PyTorch network:
-```
+```python
 from pytorch_neat.recurrent_net import RecurrentNet
 
 net = RecurrentNet.create(genome, config, bs)
@@ -21,14 +21,14 @@ outputs = net.activate(some_array)
 ```
 
 You can also turn a NEAT-Python genome into a CPPN:
-```
+```python
 from pytorch_neat.cppn import create_cppn
 
 cppn_nodes = create_cppn(genome, config)
 ```
 
 A CPPN is represented as a graph structure. For easy evaluation, a CPPN's input and output nodes may be named:
-```
+```python
 from pytorch_neat.cppn import create_cppn
 
 [delta_w_node] = create_cppn(
@@ -42,7 +42,7 @@ delta_w = delta_w_node(x_in=some_array, y_in=other_array, ...)
 ```
 
 We also provide some infrastructure for running networks in Gym environments:
-```
+```python
 from pytorch_neat.multi_env_eval import MultiEnvEvaluator
 from pytorch_neat.recurrent_net import RecurrentNet
 
@@ -66,12 +66,12 @@ fitness = evaluator.eval_genome(genome)
 This allows multiple environments to run in parallel for efficiency.
 
 A simple example using NEAT to solve the Cartpole can be run like this:
-```
+```bash
 python3 -m examples.simple.main
 ```
 
 And a simple example using Adaptive HyperNEAT to partially solve a T-maze can be run like this:
-```
+```bash
 python3 -m examples.adaptive.main
 ```
 
