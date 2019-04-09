@@ -26,18 +26,6 @@ class ESNetwork:
         self.root_x = self.width/2
         self.root_y = (len(substrate.input_coordinates)/self.width)/2
         
-        #finds num of hypercubes of m dimensions on the boundary of a n dimensional hypercube
-    def find_sub_hypercubes(self, n, m):
-        #we will assume its been scaled into a unit hypercube
-        if(m == n):
-            return 1 #someone trying to find number of thing inside thing, that just one thing sir
-        diff = n - m
-        diff_factorial = factorial(diff)
-        search_factorial = factorial(n)
-        sub_factorial = factorial(m)
-        num_subs = (2**diff)*(search_factorial/(diff_factorial*sub_factorial))
-        return num_subs
-    
     # creates phenotype with n dimensions
     def create_phenotype_network_nd(self, filename=None):
         input_coordinates = self.substrate.input_coordinates
@@ -84,54 +72,7 @@ class ESNetwork:
         return neat.nn.RecurrentNetwork(input_nodes, output_nodes, node_evals)
         
     # Create a RecurrentNetwork using the ES-HyperNEAT approach.
-    def create_phenotype_network(self, filename=None):
-        input_coordinates = self.substrate.input_coordinates
-        output_coordinates = self.substrate.output_coordinates
-
-        input_nodes = range(len(input_coordinates))
-        output_nodes = range(len(input_nodes), len(input_nodes)+len(output_coordinates))
-        hidden_idx = len(input_coordinates)+len(output_coordinates)
-
-        coordinates, indices, draw_connections, node_evals = [], [], [], []
-        nodes = {}
-
-        coordinates.extend(input_coordinates)
-        coordinates.extend(output_coordinates)
-        indices.extend(input_nodes)
-        indices.extend(output_nodes)
-       
-        # Map input and output coordinates to their IDs. 
-        coords_to_id = dict(zip(coordinates, indices))
-        
-        # Where the magic happens.
-        hidden_nodes, connections = self.es_hyperneat()
-
-        # Map hidden coordinates to their IDs.
-        for x, y in hidden_nodes:
-            coords_to_id[x, y] = hidden_idx
-            hidden_idx += 1
-
-        # For every coordinate, check the connections and create a node with corresponding connections if appropriate.
-        for (x, y), idx in coords_to_id.items():
-            for c in connections:
-                if c.x2 == x and c.y2 == y:
-                    draw_connections.append(c)
-                    if idx in nodes:
-                        initial = nodes[idx]
-                        initial.append((coords_to_id[c.x1, c.y1], c.weight))
-                        nodes[idx] = initial
-                    else:
-                        nodes[idx] = [(coords_to_id[c.x1, c.y1], c.weight)]
-
-        # Combine the indices with the connections/links forming node_evals used by the RecurrentNetwork.
-        for idx, links in nodes.items():
-            node_evals.append((idx, self.activation, sum, 0.0, 1.0, links))
-                    
-        # Visualize the network?
-        if filename is not None:
-            draw_es(coords_to_id, draw_connections, filename)
-        return neat.nn.RecurrentNetwork(input_nodes, output_nodes, node_evals)  # This is actually a feedforward network.
-
+  
     # Recursively collect all weights for a given QuadPoint.
     @staticmethod
     def get_weights(p):
@@ -154,17 +95,16 @@ class ESNetwork:
             return 0.0
         return np.var(self.get_weights(p))
 
+    def initialize_at_depth(depth=3):
+        root_coord = []
+        for s in range(depth):
+            root_coord.append(0.0)
+        
+        root = nDimensionTree(root_coord, 1.0, 1)
+        return root
 
     def division_initialization_nd(self, coord, outgoing):
-        dimen = len(coord)
-        root_coord = []
-        #we will loop twice the length of the substrate coord
-        #we set the root of our tree to  zero index coord in the dimension of the input coord
-        #we need a n-tree with n being 2^coordlength so that we can split each dimension in a cartesian manner
-        for s in range(dimen):
-            root_coord.append(0.0)
-        #set width and level to 1.0 and 1, assume the substrate been scaled to a unit hypercube
-        root = nDimensionTree(root_coord, 1.0, 1)
+        root = self.root_tree
         q = [root]
         new_roots = []
         while q:
@@ -502,3 +442,22 @@ def find_pattern(cppn, coord, res=60, max_weight=5.0):
             im[x2][y2] = n * max_weight
 
     return im
+
+def query_torch_cppn(coord1, coord2, outgoing, cppn, max_weight=5.0):
+    result = 0.0
+    num_dimen = len(coord1)
+    master = {}
+    for x in range(num_dimen):
+        if(outgoing):
+            master["leaf_one_"+str(x)] = np.array(coord1[x])
+            master["leaf_two_"+str(x)] = np.array(coord2[x])
+        else:
+            master["leaf_one_"+str(x)] = np.array(coord2[x])
+            master["leaf_two_"+str(x)] = np.array(coord1[x])
+    #master = np.array(master)
+    w = float(cppn(master)[0])
+    
+    if abs(w) > 0.2:  # If abs(weight) is below threshold, treat weight as 0.0.
+        return w * max_weight
+    else:
+        return 0.0
