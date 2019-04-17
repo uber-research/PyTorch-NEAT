@@ -6,6 +6,9 @@ from pureples.hyperneat.hyperneat import query_torch_cppn
 from pureples.shared.visualize import draw_es, draw_es_nd
 from math import factorial
 
+#encodes a substrate of input and output coords with a cppn, adding 
+#hidden coords along the 
+
 class ESNetwork:
 
     def __init__(self, substrate, cppn, params):
@@ -69,6 +72,9 @@ class ESNetwork:
         # Visualize the network?
         if filename is not None:
             draw_es_nd(coords_to_id, draw_connections, filename)
+        
+        for ix in range(len(node_evals)):
+
         return neat.nn.RecurrentNetwork(input_nodes, output_nodes, node_evals)
         
     # Create a RecurrentNetwork using the ES-HyperNEAT approach.
