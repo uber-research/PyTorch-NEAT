@@ -213,3 +213,57 @@ class RecurrentNet():
                             activation=activation,
                             use_current_activs=use_current_activs,
                             n_internal_steps=n_internal_steps)
+
+
+    @staticmethod
+    def create_from_es(in_nodes, out_nodes, node_evals, batch_size=1, activation=sigmoid_activation,
+               prune_empty=False, use_current_activs=False, n_internal_steps=1):
+        hidden_responses = [1.0 for k in len(node_evals)-(len(in_nodes)+len(out_nodes))]
+        output_responses = [1.0 for k in output_keys]
+
+        hidden_biases = [1.0 for k in len(node_evals)-(len(in_nodes)+len(out_nodes))]
+        output_biases = [1.0 for k in output_keys]
+
+        input_to_hidden = ([], [])
+        hidden_to_hidden = ([], [])
+        output_to_hidden = ([], [])
+        input_to_output = ([], [])
+        hidden_to_output = ([], [])
+        output_to_output = ([], [])
+
+        # this could be optimized by first checking in out or hidden 
+        # of ikey but for now this is how im doing it to keep it looking familiar
+        for conn in node_evals:
+            #pruning is done in the eshyperneat class
+            i_key = conn[0]
+            for x in conn[5]:
+                o_key = x[0]
+
+                if i_key in in_nodes and o_key not in out_nodes:
+                    idxs, vals = input_to_hidden
+                elif i_key not in in_nodes and i_key not in out_nodes and o_key not in in_nodes and o_key not in out_nodes:
+                    idxs, vals = hidden_to_hidden
+                elif i_key in out_nodes and o_key not in out_nodes and o_key not in in_nodes:
+                    idxs, vals = output_to_hidden
+                elif i_key in in_nodes and o_key in out_nodes:
+                    idxs, vals = input_to_output
+                elif i_key not in in_nodes and i_key not in out_nodes and o_key in out_nodes:
+                    idxs, vals = hidden_to_output
+                elif i_key in out_nodes and o_key in out_nodes:
+                    idxs, vals = output_to_output
+                else:
+                    raise ValueError(
+                        'Invalid connection from key {} to key {}'.format(i_key, o_key))
+
+                idxs.append((i_key, o_key))  # to, from
+                vals.append(x[1])
+                
+        return RecurrentNet(n_inputs, n_hidden, n_outputs,
+                            input_to_hidden, hidden_to_hidden, output_to_hidden,
+                            input_to_output, hidden_to_output, output_to_output,
+                            hidden_responses, output_responses,
+                            hidden_biases, output_biases,
+                            batch_size=batch_size,
+                            activation=activation,
+                            use_current_activs=use_current_activs,
+                            n_internal_steps=n_internal_steps)

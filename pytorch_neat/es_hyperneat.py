@@ -72,9 +72,7 @@ class ESNetwork:
         # Visualize the network?
         if filename is not None:
             draw_es_nd(coords_to_id, draw_connections, filename)
-        
-        for ix in range(len(node_evals)):
-
+                    
         return neat.nn.RecurrentNetwork(input_nodes, output_nodes, node_evals)
         
     # Create a RecurrentNetwork using the ES-HyperNEAT approach.
