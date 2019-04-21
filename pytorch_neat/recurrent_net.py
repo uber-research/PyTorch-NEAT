@@ -219,10 +219,10 @@ class RecurrentNet():
     def create_from_es(in_nodes, out_nodes, node_evals, batch_size=1, activation=sigmoid_activation,
                prune_empty=False, use_current_activs=False, n_internal_steps=1):
         hidden_responses = [1.0 for k in len(node_evals)-(len(in_nodes)+len(out_nodes))]
-        output_responses = [1.0 for k in output_keys]
+        output_responses = [1.0 for k in len(out_nodes)]
 
         hidden_biases = [1.0 for k in len(node_evals)-(len(in_nodes)+len(out_nodes))]
-        output_biases = [1.0 for k in output_keys]
+        output_biases = [1.0 for k in len(out_nodes)]
 
         input_to_hidden = ([], [])
         hidden_to_hidden = ([], [])
@@ -257,8 +257,8 @@ class RecurrentNet():
 
                 idxs.append((i_key, o_key))  # to, from
                 vals.append(x[1])
-                
-        return RecurrentNet(n_inputs, n_hidden, n_outputs,
+
+        return RecurrentNet(len(in_nodes), len(node_evals)-(len(in_nodes)+len(out_nodes)), len(out_nodes),
                             input_to_hidden, hidden_to_hidden, output_to_hidden,
                             input_to_output, hidden_to_output, output_to_output,
                             hidden_responses, output_responses,

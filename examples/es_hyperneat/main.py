@@ -12,55 +12,52 @@
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
 
-import multiprocessing
 import os
 
 import click
+import gym
 import neat
 
-# import torch
-import numpy as np
-from pytorch_neat import cppn
-
-from pytorch_neat import t_maze
-from pytorch_neat.activations import tanh_activation
-from pytorch_neat.adaptive_linear_net import AdaptiveLinearNet
 from pytorch_neat.multi_env_eval import MultiEnvEvaluator
 from pytorch_neat.neat_reporter import LogReporter
+from pytorch_neat.recurrent_net import RecurrentNet
+from pytorch_neat.es_hyperneat import ESNetwork
+from pytroch_neat.substrate import Substrate
+from pytorch_neat.cppn import create_cppn
 
-batch_size = 4
-DEBUG = True
+max_env_steps = 200
 
 
-def make_net(genome, config, _batch_size):
-    input_coords = [[-1.0, 0.0], [0.0, 0.0], [1.0, 0.0], [0.0, -1.0]]
+def make_env():
+    return gym.make("CartPole-v0")
 
+def make_net(genome, config, bs):
+    #start by setting up a substrate for this bad cartpole boi
+    input_cords = []
+    output_cords = [([0.0, -1.0, 0.0)]
+    sign = 1
+    for i in range(4):
+        input_cords.append((0.0 - i/10*sign, 1.0, 0.0))
+        sign *= -1
     leaf_names = []
+    for i in range(3):
+        self.leaf_names.append('leaf_one_'+str(i))
+        self.leaf_names.append('leaf_two_'+str(i))
 
-    for l in range(len(input_coords)):
-        leaf_names.append('leaf_one_'+str(l))
-        leaf_names.append('leaf_two_'+str(l))
+    [cppn] = create_cppn(genome, config, leaf_names, ['cppn_out'])
+    net_builder = ESNetwork(self.subStrate, self.cppn, self.params)
+    net = net_builder.create_phenotype_network_nd('./champs_visualizedd3/genome_'+str(g_ix))
+    return net
 
-    return cppn.create_cppn(genome, config, leaf_names, ["cppn_out"])
 
-def activate_net(net, states, debug=False, step_num=0):
-    if debug and step_num == 1:
-        print("\n" + "=" * 20 + " DEBUG " + "=" * 20)
-        print(net.delta_w_node)
-        print("W init: ", net.input_to_output[0])
+def activate_net(net, states):
     outputs = net.activate(states).numpy()
-    if debug and (step_num - 1) % 100 == 0:
-        print("\nStep {}".format(step_num - 1))
-        print("Outputs: ", outputs[0])
-        print("Delta W: ", net.delta_w[0])
-        print("W: ", net.input_to_output[0])
-    return np.argmax(outputs, axis=1)
+    return outputs[:, 0] > 0.5
 
 
 @click.command()
-@click.option("--n_generations", type=int, default=10000)
-@click.option("--n_processes", type=int, default=1)
-def run(n_generations, n_processes):
+@click.option("--n_generations", type=int, default=100)
+def run(n_generations):
     # Load the config file, which is assumed to live in
     # the same directory as this script.
     config_path = os.path.join(os.path.dirname(__file__), "neat.cfg")
@@ -72,49 +69,23 @@ def run(n_generations, n_processes):
         config_path,
     )
 
-    envs = [t_maze.TMazeEnv(init_reward_side=i, n_trials=100) for i in [1, 0, 1, 0]]
-
     evaluator = MultiEnvEvaluator(
-        make_net, activate_net, envs=envs, batch_size=batch_size, max_env_steps=1000
+        make_net, activate_net, make_env=make_env, max_env_steps=max_env_steps
     )
 
-    if n_processes > 1:
-        pool = multiprocessing.Pool(processes=n_processes)
-
-        def eval_genomes(genomes, config):
-            fitnesses = pool.starmap(
-                evaluator.eval_genome, ((genome, config) for _, genome in genomes)
-            )
-            for (_, genome), fitness in zip(genomes, fitnesses):
-                genome.fitness = fitness
-
-    else:
-
-        def eval_genomes(genomes, config):
-            for i, (_, genome) in enumerate(genomes):
-                try:
-                    genome.fitness = evaluator.eval_genome(
-                        genome, config, debug=DEBUG and i % 100 == 0
-                    )
-                except Exception as e:
-                    print(genome)
-                    raise e
+    def eval_genomes(genomes, config):
+        for _, genome in genomes:
+            genome.fitness = evaluator.eval_genome(genome, config)
 
     pop = neat.Population(config)
     stats = neat.StatisticsReporter()
     pop.add_reporter(stats)
     reporter = neat.StdOutReporter(True)
     pop.add_reporter(reporter)
-    logger = LogReporter("log.json", evaluator.eval_genome)
+    logger = LogReporter("neat.log", evaluator.eval_genome)
     pop.add_reporter(logger)
 
-    winner = pop.run(eval_genomes, n_generations)
-
-    print(winner)
-    final_performance = evaluator.eval_genome(winner, config)
-    print("Final performance: {}".format(final_performance))
-    generations = reporter.generation + 1
-    return generations
+    pop.run(eval_genomes, n_generations)
 
 
 if __name__ == "__main__":
