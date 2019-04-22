@@ -5,6 +5,7 @@ import itertools
 from pureples.hyperneat.hyperneat import query_torch_cppn
 from pureples.shared.visualize import draw_es, draw_es_nd
 from math import factorial
+from pytorch_neat.recurrent_net import RecurrentNet
 
 #encodes a substrate of input and output coords with a cppn, adding 
 #hidden coords along the 
@@ -28,7 +29,8 @@ class ESNetwork:
         self.width = len(substrate.output_coordinates)
         self.root_x = self.width/2
         self.root_y = (len(substrate.input_coordinates)/self.width)/2
-        
+        self.root_tree = nDimensionTree((0.0, 0.0, 0.0), 1.0, 1)
+
     # creates phenotype with n dimensions
     def create_phenotype_network_nd(self, filename=None):
         input_coordinates = self.substrate.input_coordinates
@@ -73,7 +75,7 @@ class ESNetwork:
         if filename is not None:
             draw_es_nd(coords_to_id, draw_connections, filename)
                     
-        return neat.nn.RecurrentNetwork(input_nodes, output_nodes, node_evals)
+        return RecurrentNet.create_from_es(input_nodes, output_nodes, node_evals)
         
     # Create a RecurrentNetwork using the ES-HyperNEAT approach.
   

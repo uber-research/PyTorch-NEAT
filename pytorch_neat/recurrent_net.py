@@ -34,7 +34,7 @@ def dense_from_coo(shape, conns, dtype=torch.float64):
     if len(idxs) == 0:
         return mat
     rows, cols = np.array(idxs).transpose()
-    mat[torch.tensor(rows), torch.tensor(cols)] = torch.tensor(
+    mat[torch.LongTensor(rows), torch.LongTensor(cols)] = torch.tensor(
         weights, dtype=dtype)
     return mat
 
@@ -218,11 +218,11 @@ class RecurrentNet():
     @staticmethod
     def create_from_es(in_nodes, out_nodes, node_evals, batch_size=1, activation=sigmoid_activation,
                prune_empty=False, use_current_activs=False, n_internal_steps=1):
-        hidden_responses = [1.0 for k in len(node_evals)-(len(in_nodes)+len(out_nodes))]
-        output_responses = [1.0 for k in len(out_nodes)]
+        hidden_responses = [1.0 for k in range(len(node_evals)-(len(in_nodes)+len(out_nodes)))]
+        output_responses = [1.0 for k in range(len(out_nodes))]
 
-        hidden_biases = [1.0 for k in len(node_evals)-(len(in_nodes)+len(out_nodes))]
-        output_biases = [1.0 for k in len(out_nodes)]
+        hidden_biases = [1.0 for k in range(len(node_evals)-(len(in_nodes)+len(out_nodes)))]
+        output_biases = [1.0 for k in range(len(out_nodes))]
 
         input_to_hidden = ([], [])
         hidden_to_hidden = ([], [])
@@ -238,7 +238,7 @@ class RecurrentNet():
             i_key = conn[0]
             for x in conn[5]:
                 o_key = x[0]
-
+                add_conn = True
                 if i_key in in_nodes and o_key not in out_nodes:
                     idxs, vals = input_to_hidden
                 elif i_key not in in_nodes and i_key not in out_nodes and o_key not in in_nodes and o_key not in out_nodes:
@@ -252,11 +252,12 @@ class RecurrentNet():
                 elif i_key in out_nodes and o_key in out_nodes:
                     idxs, vals = output_to_output
                 else:
-                    raise ValueError(
-                        'Invalid connection from key {} to key {}'.format(i_key, o_key))
+                    print("encountered invalid connection, dismissing this")
+                    add_conn = False
+                if add_conn == True:    
+                    idxs.append((i_key, o_key))  # to, from
+                    vals.append(float(x[1]))
 
-                idxs.append((i_key, o_key))  # to, from
-                vals.append(x[1])
 
         return RecurrentNet(len(in_nodes), len(node_evals)-(len(in_nodes)+len(out_nodes)), len(out_nodes),
                             input_to_hidden, hidden_to_hidden, output_to_hidden,

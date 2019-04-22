@@ -22,7 +22,7 @@ from pytorch_neat.multi_env_eval import MultiEnvEvaluator
 from pytorch_neat.neat_reporter import LogReporter
 from pytorch_neat.recurrent_net import RecurrentNet
 from pytorch_neat.es_hyperneat import ESNetwork
-from pytroch_neat.substrate import Substrate
+from pytorch_neat.substrate import Substrate
 from pytorch_neat.cppn import create_cppn
 
 max_env_steps = 200
@@ -33,22 +33,29 @@ def make_env():
 
 def make_net(genome, config, bs):
     #start by setting up a substrate for this bad cartpole boi
+    params = {"initial_depth": 2,
+            "max_depth": 4,
+            "variance_threshold": 0.00013,
+            "band_threshold": 0.00013,
+            "iteration_level": 3,
+            "division_threshold": 0.00013,
+            "max_weight": 3.0,
+            "activation": "tanh"}
     input_cords = []
-    output_cords = [([0.0, -1.0, 0.0)]
+    output_cords = [(0.0, -1.0, 0.0)]
     sign = 1
     for i in range(4):
         input_cords.append((0.0 - i/10*sign, 1.0, 0.0))
         sign *= -1
     leaf_names = []
     for i in range(3):
-        self.leaf_names.append('leaf_one_'+str(i))
-        self.leaf_names.append('leaf_two_'+str(i))
+        leaf_names.append('leaf_one_'+str(i))
+        leaf_names.append('leaf_two_'+str(i))
 
     [cppn] = create_cppn(genome, config, leaf_names, ['cppn_out'])
-    net_builder = ESNetwork(self.subStrate, self.cppn, self.params)
-    net = net_builder.create_phenotype_network_nd('./champs_visualizedd3/genome_'+str(g_ix))
+    net_builder = ESNetwork(Substrate(input_cords, output_cords), cppn, params)
+    net = net_builder.create_phenotype_network_nd('./genome_vis')
     return net
-
 
 def activate_net(net, states):
     outputs = net.activate(states).numpy()
