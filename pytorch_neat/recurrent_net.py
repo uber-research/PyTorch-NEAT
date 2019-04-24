@@ -224,6 +224,24 @@ class RecurrentNet():
         hidden_biases = [1.0 for k in range(len(node_evals)-(len(in_nodes)+len(out_nodes)))]
         output_biases = [1.0 for k in range(len(out_nodes))]
 
+        input_key_to_idx = {k: i for i, k in enumerate(in_nodes)}
+        output_key_to_idx = {k: i for i, k in enumerate(out_nodes)}
+        hidden_key_to_idx = {}
+
+        hidden_idx = -1
+
+        def key_to_idx(key, hid_idx):
+            if key in in_nodes:
+                return input_key_to_idx[key]
+            elif key in out_nodes:
+                return output_key_to_idx[key]
+            elif key in hidden_key_to_idx.keys():
+                return hidden_key_to_idx[key]
+            else:
+                hid_idx += 1
+                hidden_key_to_idx[key] = hid_idx
+                return hid_idx
+
         input_to_hidden = ([], [])
         hidden_to_hidden = ([], [])
         output_to_hidden = ([], [])
@@ -235,9 +253,9 @@ class RecurrentNet():
         # of ikey but for now this is how im doing it to keep it looking familiar
         for conn in node_evals:
             #pruning is done in the eshyperneat class
-            i_key = conn[0]
+            i_key = key_to_idx(conn[0], hidden_idx)
             for x in conn[5]:
-                o_key = x[0]
+                o_key = key_to_idx(x[0], hidden_idx)
                 add_conn = True
                 if i_key in in_nodes and o_key not in out_nodes:
                     idxs, vals = input_to_hidden

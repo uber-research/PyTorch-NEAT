@@ -143,7 +143,7 @@ class ESNetwork:
 
             for c in p.cs:
                 c.w = query_cppn(coord, (c.x, c.y), outgoing, self.cppn, self.max_weight)
-            
+            print(self.variance(p))
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth and self.variance(p) > self.division_threshold):
                 for child in p.cs:
                     q.append(child)
