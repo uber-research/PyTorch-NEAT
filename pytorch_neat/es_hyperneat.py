@@ -112,7 +112,6 @@ class ESNetwork:
     def division_initialization_nd(self, coord, outgoing):
         root = self.root_tree
         q = [root]
-        new_roots = []
         while q:
             p = q.pop(0)
             # here we will subdivide to 2^coordlength as described above
@@ -122,11 +121,10 @@ class ESNetwork:
                 c.w = query_torch_cppn(coord, c.coord, outgoing, self.cppn, self.max_weight)
             
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth and self.variance(p) > self.division_threshold):
-                new_roots.append(p)
                 for child in p.cs:
                     q.append(child)
 
-        return new_roots
+        return root
 
 
     # Initialize the quadtree by dividing it in appropriate quads.
@@ -219,37 +217,31 @@ class ESNetwork:
         connections1, connections2, connections3 = set(), set(), set()
         
         for i in inputs:
-            roots = self.division_initialization_nd(i, True)
-            while(roots):
-                root = roots.pop(0)
-                self.prune_all_the_dimensions(i, root, True)
-                connections1 = connections1.union(self.connections)
-                for c in connections1:
-                    hidden_nodes.add(tuple(c.coord2))
-                self.connections = set()
+            root = self.division_initialization_nd(i, True)
+            self.prune_all_the_dimensions(i, root, True)
+            connections1 = connections1.union(self.connections)
+            for c in connections1:
+                hidden_nodes.add(tuple(c.coord2))
+            self.connections = set()
 
         unexplored_hidden_nodes = copy.deepcopy(hidden_nodes)
 
         for i in range(self.iteration_level):
             for index_coord in unexplored_hidden_nodes:
-                roots = self.division_initialization_nd(index_coord, True)
-                while(roots):
-                    root = roots.pop(0)
-                    self.prune_all_the_dimensions(index_coord, root, True)
-                    connections2 = connections2.union(self.connections)
-                    for c in connections2:
-                        hidden_nodes.add(tuple(c.coord2))
-                    self.connections = set()
+                root = self.division_initialization_nd(index_coord, True)
+                self.prune_all_the_dimensions(index_coord, root, True)
+                connections2 = connections2.union(self.connections)
+                for c in connections2:
+                    hidden_nodes.add(tuple(c.coord2))
+                self.connections = set()
         
         unexplored_hidden_nodes -= hidden_nodes
         
         for c_index in range(len(outputs)):
-            roots = self.division_initialization_nd(outputs[c_index], False)
-            while(roots):
-                root = roots.pop(0)
-                self.prune_all_the_dimensions(outputs[c_index], root, False)
-                connections3 = connections3.union(self.connections)
-                self.connections = set()
+            root = self.division_initialization_nd(outputs[c_index], False)
+            self.prune_all_the_dimensions(outputs[c_index], root, False)
+            connections3 = connections3.union(self.connections)
+            self.connections = set()
         connections = connections1.union(connections2.union(connections3))
         return self.clean_n_dimensional(connections)
             
@@ -326,43 +318,6 @@ class ESNetwork:
         
         
     # Clean a net for dangling connections by intersecting paths from input nodes with paths to output.
-    def clean_net(self, connections):
-        connected_to_inputs = set(tuple(i) for i in self.substrate.input_coordinates)
-        connected_to_outputs = set(tuple(i) for i in self.substrate.output_coordinates)
-        true_connections = set()
-
-        initial_input_connections = copy.deepcopy(connections)
-        initial_output_connections = copy.deepcopy(connections)
-
-        add_happened = True
-        while add_happened:  # The path from inputs.
-            add_happened = False
-            temp_input_connections = copy.deepcopy(initial_input_connections)
-            for c in temp_input_connections:
-                if (c.x1, c.y1) in connected_to_inputs:
-                    connected_to_inputs.add((c.x2, c.y2))
-                    initial_input_connections.remove(c)
-                    add_happened = True
-
-        add_happened = True
-        while add_happened:  # The path to outputs.
-            add_happened = False      
-            temp_output_connections = copy.deepcopy(initial_output_connections)
-            for c in temp_output_connections:
-                if (c.x2, c.y2) in connected_to_outputs:
-                    connected_to_outputs.add((c.x1, c.y1))
-                    initial_output_connections.remove(c)
-                    add_happened = True
-        
-        true_nodes = connected_to_inputs.intersection(connected_to_outputs)
-        for c in connections: 
-            # Only include connection if both source and target node resides in the real path from input to output
-            if (c.x1, c.y1) in true_nodes and (c.x2, c.y2) in true_nodes:
-                true_connections.add(c)
-        
-        true_nodes -= (set(self.substrate.input_coordinates).union(set(self.substrate.output_coordinates)))
-        
-        return true_nodes, true_connections
 
 
 # Class representing an area in the quadtree defined by a center coordinate and the distance to the edges of the area. 

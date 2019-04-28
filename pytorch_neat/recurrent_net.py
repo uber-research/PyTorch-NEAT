@@ -15,7 +15,7 @@
 import torch
 import numpy as np
 from .activations import sigmoid_activation
-
+import json
 
 # def sparse_mat(shape, conns):
 #     idxs, weights = conns
@@ -31,6 +31,7 @@ from .activations import sigmoid_activation
 def dense_from_coo(shape, conns, dtype=torch.float64):
     mat = torch.zeros(shape, dtype=dtype)
     idxs, weights = conns
+    print(idxs)
     if len(idxs) == 0:
         return mat
     rows, cols = np.array(idxs).transpose()
@@ -218,6 +219,7 @@ class RecurrentNet():
     @staticmethod
     def create_from_es(in_nodes, out_nodes, node_evals, batch_size=1, activation=sigmoid_activation,
                prune_empty=False, use_current_activs=False, n_internal_steps=1):
+        print(len(node_evals))
         hidden_responses = [1.0 for k in range(len(node_evals)-(len(in_nodes)+len(out_nodes)))]
         output_responses = [1.0 for k in range(len(out_nodes))]
 
@@ -253,9 +255,11 @@ class RecurrentNet():
         # of ikey but for now this is how im doing it to keep it looking familiar
         for conn in node_evals:
             #pruning is done in the eshyperneat class
-            i_key = key_to_idx(conn[0], hidden_idx)
+            i_key = conn[0]
             for x in conn[5]:
-                o_key = key_to_idx(x[0], hidden_idx)
+                o_key = x[0]
+                i_idx = key_to_idx(i_key, hidden_idx)
+                o_idx = key_to_idx(o_key, hidden_idx)
                 add_conn = True
                 if i_key in in_nodes and o_key not in out_nodes:
                     idxs, vals = input_to_hidden
@@ -270,13 +274,11 @@ class RecurrentNet():
                 elif i_key in out_nodes and o_key in out_nodes:
                     idxs, vals = output_to_output
                 else:
-                    print("encountered invalid connection, dismissing this")
                     add_conn = False
                 if add_conn == True:    
-                    idxs.append((i_key, o_key))  # to, from
+                    idxs.append((o_idx, i_idx))  # to, from
                     vals.append(float(x[1]))
-
-
+        
         return RecurrentNet(len(in_nodes), len(node_evals)-(len(in_nodes)+len(out_nodes)), len(out_nodes),
                             input_to_hidden, hidden_to_hidden, output_to_hidden,
                             input_to_output, hidden_to_output, output_to_output,
