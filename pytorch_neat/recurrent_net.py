@@ -31,7 +31,6 @@ import json
 def dense_from_coo(shape, conns, dtype=torch.float64):
     mat = torch.zeros(shape, dtype=dtype)
     idxs, weights = conns
-    print(idxs)
     if len(idxs) == 0:
         return mat
     rows, cols = np.array(idxs).transpose()
