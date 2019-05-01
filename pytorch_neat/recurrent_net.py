@@ -218,7 +218,6 @@ class RecurrentNet():
     @staticmethod
     def create_from_es(in_nodes, out_nodes, node_evals, batch_size=1, activation=sigmoid_activation,
                prune_empty=False, use_current_activs=False, n_internal_steps=1):
-        print(len(node_evals))
         hidden_responses = [1.0 for k in range(len(node_evals)-(len(in_nodes)+len(out_nodes)))]
         output_responses = [1.0 for k in range(len(out_nodes))]
 
