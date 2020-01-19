@@ -2,11 +2,9 @@ import neat
 import copy
 import numpy as np
 import itertools
-from pureples.hyperneat.hyperneat import query_torch_cppn
-from pureples.shared.visualize import draw_es, draw_es_nd
 from math import factorial
 from pytorch_neat.recurrent_net import RecurrentNet
-
+from pytorch_neat.cppn import get_nd_coord_inputs
 #encodes a substrate of input and output coords with a cppn, adding 
 #hidden coords along the 
 
@@ -31,8 +29,11 @@ class ESNetwork:
         self.root_y = (len(substrate.input_coordinates)/self.width)/2
         self.root_tree = nDimensionTree((0.0, 0.0, 0.0), 1.0, 1)
 
+
     # creates phenotype with n dimensions
     def create_phenotype_network_nd(self, filename=None):
+        self.es_hyperneat_nd_tensors()
+        return
         input_coordinates = self.substrate.input_coordinates
         output_coordinates = self.substrate.output_coordinates
 
@@ -52,7 +53,7 @@ class ESNetwork:
         coords_to_id = dict(zip(coordinates, indices))
         
         # Where the magic happens.
-        hidden_nodes, connections = self.es_hyperneat_nd()
+        hidden_nodes, connections = self.es_hyperneat_nd_tensors()
         
         for cs in hidden_nodes:
             coords_to_id[cs] = hidden_idx
@@ -73,7 +74,8 @@ class ESNetwork:
                     
         # Visualize the network?
         if filename is not None:
-            draw_es_nd(coords_to_id, draw_connections, filename)
+            #draw_es_nd(coords_to_id, draw_connections, filename)
+            print("not today yeahhaaa")
                     
         return RecurrentNet.create_from_es(input_nodes, output_nodes, node_evals)
         
@@ -101,7 +103,7 @@ class ESNetwork:
             return 0.0
         return np.var(self.get_weights(p))
 
-    def initialize_at_depth(depth=3):
+    def initialize_at_depth(self, depth=3):
         root_coord = []
         for s in range(depth):
             root_coord.append(0.0)
@@ -126,27 +128,25 @@ class ESNetwork:
 
         return root
 
-
-    # Initialize the quadtree by dividing it in appropriate quads.
-    def division_initialization(self, coord, outgoing):
-        root = QuadPoint(0.0, 0.0, 1.0, 1.0)
+    def division_initialization_nd_tensors(self, coords, outgoing):
+        root = self.root_tree
         q = [root]
         while q:
             p = q.pop(0)
-            
-            p.cs[0] = QuadPoint(p.x - p.width/2.0, p.y - p.width/2.0, p.width/2.0, p.lvl + 1)
-            p.cs[1] = QuadPoint(p.x - p.width/2.0, p.y + p.width/2.0, p.width/2.0, p.lvl + 1)
-            p.cs[2] = QuadPoint(p.x + p.width/2.0, p.y + p.width/2.0, p.width/2.0, p.lvl + 1)
-            p.cs[3] = QuadPoint(p.x + p.width/2.0, p.y - p.width/2.0, p.width/2.0, p.lvl + 1)
-
+            # here we will subdivide to 2^coordlength as described above
+            # this allows us to search from +- midpoints on each axis of the input coord
+            p.divide_childrens()
+            out_coords = []
             for c in p.cs:
-                c.w = query_cppn(coord, (c.x, c.y), outgoing, self.cppn, self.max_weight)
-            print(self.variance(p))
+                out_coords.append(c.coord)
+            weights = query_torch_cppn_tensors(coords, out_coords, outgoing, self.cppn, self.max_weight)
+            
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth and self.variance(p) > self.division_threshold):
                 for child in p.cs:
                     q.append(child)
 
         return root
+
     # n-dimensional pruning and extradition
     def prune_all_the_dimensions(self, coord, p, outgoing):
         for c in p.cs:
@@ -185,30 +185,6 @@ class ESNetwork:
                     if not c.w == 0.0:
                         self.connections.add(con)
 
-    # Determines which connections to express - high variance = more connetions.
-    def pruning_extraction(self, coord, p, outgoing):
-        for c in p.cs:
-
-            d_left, d_right, d_top, d_bottom = None, None, None, None
-
-            if self.variance(c) > self.variance_threshold:
-                self.pruning_extraction(coord, c, outgoing)
-            else:
-                d_left = abs(c.w - query_cppn(coord, (c.x - p.width, c.y), outgoing, self.cppn, self.max_weight))
-                d_right = abs(c.w - query_cppn(coord, (c.x + p.width, c.y), outgoing, self.cppn, self.max_weight))
-                d_top = abs(c.w - query_cppn(coord, (c.x, c.y - p.width), outgoing, self.cppn, self.max_weight))
-                d_bottom = abs(c.w - query_cppn(coord, (c.x, c.y + p.width), outgoing, self.cppn, self.max_weight))
-
-                con = None
-                if max(min(d_top, d_bottom), min(d_left, d_right)) > self.band_threshold:
-                    if outgoing:
-                        con = Connection(coord[0], coord[1], c.x, c.y, c.w)
-                    else:
-                        con = Connection(c.x, c.y, coord[0], coord[1], c.w)
-                if con is not None:
-                    if not c.w == 0.0 and con.y1 <= con.y2 and not (con.x1 == con.x2 and con.y1 == con.y2):
-                        self.connections.add(con)
-
     # Explores the hidden nodes and their connections.
     def es_hyperneat_nd(self):
         inputs = self.substrate.input_coordinates
@@ -245,7 +221,15 @@ class ESNetwork:
         connections = connections1.union(connections2.union(connections3))
         return self.clean_n_dimensional(connections)
             
-    
+    def es_hyperneat_nd_tensors(self):
+        inputs = self.substrate.input_coordinates
+        outputs = self.substrate.output_coordinates
+        hidden_nodes, unexplored_hidden_nodes = set(), set()
+        connections1, connections2, connections3 = set(), set(), set()
+        root = self.division_initialization_nd_tensors(inputs, True)
+
+
+
     def es_hyperneat(self):
         inputs = self.substrate.input_coordinates
         outputs = self.substrate.output_coordinates
@@ -416,9 +400,28 @@ def query_torch_cppn(coord1, coord2, outgoing, cppn, max_weight=5.0):
             master["leaf_one_"+str(x)] = np.array(coord2[x])
             master["leaf_two_"+str(x)] = np.array(coord1[x])
     #master = np.array(master)
-    w = float(cppn(master)[0])
+    activs = cppn(master)
+    print(activs)
+    w = float(activs[0])
+    print(w)
     
     if abs(w) > 0.2:  # If abs(weight) is below threshold, treat weight as 0.0.
         return w * max_weight
     else:
         return 0.0
+
+def query_torch_cppn_tensors(coords_in, coords_out, outgoing, cppn, max_weight=5.0):
+    inputs = get_nd_coord_inputs(coords_in, coords_out)
+    '''
+    for x in range(num_dimen):
+        if(outgoing):
+            master["leaf_one_"+str(x)] = np.array(coord1[x])
+            master["leaf_two_"+str(x)] = np.array(coord2[x])
+        else:
+            master["leaf_one_"+str(x)] = np.array(coord2[x])
+            master["leaf_two_"+str(x)] = np.array(coord1[x])
+    '''
+    #master = np.array(master)
+    activs = cppn(inputs)
+    print(activs)
+    return activs

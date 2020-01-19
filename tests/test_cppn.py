@@ -90,3 +90,4 @@ def test_cppn_deep_call():
     assert np.allclose(c_activs, np.full(shape, 3.0))
     b_activs = b(x=torch.full(shape, 1.5), y=torch.full(shape, 2.0))
     assert np.allclose(b_activs, np.full(shape, 3.5))
+test_cppn_call()
