@@ -74,7 +74,7 @@ class AdaptiveLinearNet:
             )
         )
         clamp_weights_(weights, self.weight_threshold, self.weight_max)
-
+        print("Adaptive net weights: ", weights)
         return weights
 
     def reset(self):

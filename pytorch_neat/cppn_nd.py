@@ -93,7 +93,7 @@ class Node:
             self.activs = self.activate(xs, shape)
         return self.activs
 
-    def __call__(self, **inputs):
+    def __call__(self, inputs = {}):
         assert self.leaves is not None
         assert inputs
         #print(inputs)

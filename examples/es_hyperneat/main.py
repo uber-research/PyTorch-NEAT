@@ -39,7 +39,7 @@ def make_net(genome, config, bs):
     output_cords = [(0.0, -1.0, 0.0)]
     sign = 1
     # we will use a 3 dimensional substrate, coords laid out here
-    for i in range(3):
+    for i in range(4):
         input_cords.append((0.0 - i/10*sign, 1.0, 0.0))
         sign *= -1
     leaf_names = []
