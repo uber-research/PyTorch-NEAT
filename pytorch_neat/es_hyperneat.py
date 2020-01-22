@@ -412,6 +412,7 @@ def query_torch_cppn(coord1, coord2, outgoing, cppn, max_weight=5.0):
 
 def query_torch_cppn_tensors(coords_in, coords_out, outgoing, cppn, max_weight=5.0):
     inputs = get_nd_coord_inputs(coords_in, coords_out)
+    print(inputs)
     '''
     for x in range(num_dimen):
         if(outgoing):
@@ -423,5 +424,5 @@ def query_torch_cppn_tensors(coords_in, coords_out, outgoing, cppn, max_weight=5
     '''
     #master = np.array(master)
     activs = cppn(inputs)
-    print(activs)
+    print("weights", activs)
     return activs

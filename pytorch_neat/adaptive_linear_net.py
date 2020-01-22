@@ -56,7 +56,7 @@ class AdaptiveLinearNet:
 
     def get_init_weights(self, in_coords, out_coords, w_node):
         (x_out, y_out), (x_in, y_in) = get_coord_inputs(in_coords, out_coords)
-
+        print(x_out)
         n_in = len(in_coords)
         n_out = len(out_coords)
 
@@ -73,6 +73,7 @@ class AdaptiveLinearNet:
                 w=zeros,
             )
         )
+        print("weights output: ", )
         clamp_weights_(weights, self.weight_threshold, self.weight_max)
         print("Adaptive net weights: ", weights)
         return weights

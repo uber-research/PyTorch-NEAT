@@ -22,5 +22,4 @@ def test_coords():
     )
     print(get_coord_inputs(inputs_2, outputs_2))
     print(get_nd_coord_inputs(inputs, outputs))
-
-def test_init_cppn():
+test_coords()
