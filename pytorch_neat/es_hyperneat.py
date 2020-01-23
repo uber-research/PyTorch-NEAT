@@ -137,9 +137,7 @@ class ESNetwork:
             # this allows us to search from +- midpoints on each axis of the input coord
             p.divide_childrens()
             out_coords = []
-            for c in p.cs:
-                out_coords.append(c.coord)
-            weights = query_torch_cppn_tensors(coords, out_coords, outgoing, self.cppn, self.max_weight)
+            weights = query_torch_cppn_tensors(p.child_coords, out_coords, outgoing, self.cppn, self.max_weight)
             
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth and self.variance(p) > self.division_threshold):
                 for child in p.cs:
@@ -325,6 +323,7 @@ class nDimensionTree:
         self.lvl = level
         self.num_children = 2**len(self.coord)
         self.cs = []
+        self.child_coords = []
         self.signs = self.set_signs()
         #print(self.signs)
     def set_signs(self):
@@ -336,6 +335,7 @@ class nDimensionTree:
             for y in range(len(self.coord)):
                 new_coord.append(self.coord[y] + (self.width/(2*self.signs[x][y])))
             newby = nDimensionTree(new_coord, self.width/2, self.lvl+1)
+            self.child_coords.append(new_coord)
             self.cs.append(newby)
 
 class nDTensorTreeRoot:
@@ -436,7 +436,6 @@ def query_torch_cppn(coord1, coord2, outgoing, cppn, max_weight=5.0):
 
 def query_torch_cppn_tensors(coords_in, coords_out, outgoing, cppn, max_weight=5.0):
     inputs = get_nd_coord_inputs(coords_in, coords_out)
-    print(inputs)
     '''
     for x in range(num_dimen):
         if(outgoing):
