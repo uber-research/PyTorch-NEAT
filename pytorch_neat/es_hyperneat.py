@@ -5,6 +5,7 @@ import itertools
 from math import factorial
 from pytorch_neat.recurrent_net import RecurrentNet
 from pytorch_neat.cppn import get_nd_coord_inputs
+import torch
 #encodes a substrate of input and output coords with a cppn, adding 
 #hidden coords along the 
 
@@ -137,8 +138,9 @@ class ESNetwork:
             # this allows us to search from +- midpoints on each axis of the input coord
             p.divide_childrens()
             out_coords = []
-            weights = query_torch_cppn_tensors(p.child_coords, out_coords, outgoing, self.cppn, self.max_weight)
-            
+            weights = query_torch_cppn_tensors([p.coord], p.child_coords, outgoing, self.cppn, self.max_weight)
+            for ix in range(len(p.cs)):
+                print(weights[ix])
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth and self.variance(p) > self.division_threshold):
                 for child in p.cs:
                     q.append(child)
@@ -424,5 +426,5 @@ def query_torch_cppn_tensors(coords_in, coords_out, outgoing, cppn, max_weight=5
     '''
     #master = np.array(master)
     activs = cppn(inputs)
-    print("weights", activs)
+    #print("weights", activs)
     return activs

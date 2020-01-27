@@ -275,7 +275,7 @@ def get_nd_coord_inputs(in_coords, out_coords, batch_size=None):
     )
     n_in = len(in_coords)
     n_out = len(out_coords)
-    num_dimens = len(in_coords[1])
+    num_dimens = len(in_coords[0])
     dimen_arrays = {}
 
     if batch_size is not None:
