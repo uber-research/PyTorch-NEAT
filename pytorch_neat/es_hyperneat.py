@@ -129,8 +129,9 @@ class ESNetwork:
 
         return root
 
-    def division_initialization_nd_tensors(self, coords, outgoing):
-        root = self.root_tree
+    def division_initialization_nd_tensors(self, coords, outgoing, root):
+        #root = self.root_tree
+        root = BatchednDimensionTree(coords, 1.0, 1)
         q = [root]
         while q:
             p = q.pop(0)
@@ -138,7 +139,7 @@ class ESNetwork:
             # this allows us to search from +- midpoints on each axis of the input coord
             p.divide_childrens()
             out_coords = []
-            weights = query_torch_cppn_tensors([p.coord], p.child_coords, outgoing, self.cppn, self.max_weight)
+            weights = query_torch_cppn_tensors(p.coords, p.child_coords, outgoing, self.cppn, self.max_weight)
             for ix in range(len(p.cs)):
                 print(weights[ix])
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth and self.variance(p) > self.division_threshold):
