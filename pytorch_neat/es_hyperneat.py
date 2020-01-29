@@ -139,7 +139,7 @@ class ESNetwork:
             p.divide_childrens()
             out_coords = []
             weights = query_torch_cppn_tensors(p.coords, p.child_coords, outgoing, self.cppn, self.max_weight)
-            for ix in range(len(p.cs)):
+            for ix in range(len(p.child_coords)):
                 print(weights[ix])
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth and self.variance(p) > self.division_threshold):
                 q.append(p.child_tree)
@@ -341,7 +341,7 @@ class BatchednDimensionTree:
     
     def __init__(self, in_coords, width, level):
         self.w = 0.0
-        self.coords = []
+        self.coords = in_coords
         self.coord = [0.0 for x in range(len(in_coords))]
         self.width = width
         self.lvl = level
