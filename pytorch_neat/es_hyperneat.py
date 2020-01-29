@@ -129,8 +129,7 @@ class ESNetwork:
 
         return root
 
-    def division_initialization_nd_tensors(self, coords, outgoing, root):
-        #root = self.root_tree
+    def division_initialization_nd_tensors(self, coords, outgoing):
         root = BatchednDimensionTree(coords, 1.0, 1)
         q = [root]
         while q:
@@ -143,9 +142,7 @@ class ESNetwork:
             for ix in range(len(p.cs)):
                 print(weights[ix])
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth and self.variance(p) > self.division_threshold):
-                for child in p.cs:
-                    q.append(child)
-
+                q.append(p.child_tree)
         return root
 
     # n-dimensional pruning and extradition
@@ -345,6 +342,7 @@ class BatchednDimensionTree:
     def __init__(self, in_coords, width, level):
         self.w = 0.0
         self.coords = []
+        self.coord = [0.0 for x in range(len(in_coords))]
         self.width = width
         self.lvl = level
         self.num_children = 2**len(self.coord)
@@ -360,7 +358,7 @@ class BatchednDimensionTree:
             for y in range(len(self.coord)):
                 new_coord.append(self.coord[y] + (self.width/(2*self.signs[x][y])))
             self.child_coords.append(new_coord)
-        newby = nDimensionTree(child_coords, self.width/2, self.lvl+1)
+        newby = nDimensionTree(self.child_coords, self.width/2, self.lvl+1)
         self.child_tree = newby
     
 # new tree's corresponding connection structure
