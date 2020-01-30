@@ -103,11 +103,13 @@ class ESNetwork:
         if not p:
             return 0.0
         return np.var(self.get_weights(p))
-
+    '''
+    TO BE USED WITH TENSOR IMPLEMENTATION
     def tensor_variance(self, p, ix):
         if not p:
             return 0.0
         return torch.var(p.coords[ix])
+    '''
 
     def initialize_at_depth(self, depth=3):
         root_coord = []
@@ -144,8 +146,8 @@ class ESNetwork:
             p.divide_childrens()
             out_coords = []
             weights = query_torch_cppn_tensors(p.coords, p.child_coords, outgoing, self.cppn, self.max_weight)
-            for ix in range(len(p.child_coords)):
-                print(weights[ix])
+            print(weights.shape)
+            print(weights)
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth and self.variance(p) > self.division_threshold):
                 q.append(p.child_tree)
         return root
