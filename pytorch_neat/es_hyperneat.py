@@ -104,6 +104,11 @@ class ESNetwork:
             return 0.0
         return np.var(self.get_weights(p))
 
+    def tensor_variance(self, p, ix):
+        if not p:
+            return 0.0
+        return torch.var(p.coords[ix])
+
     def initialize_at_depth(self, depth=3):
         root_coord = []
         for s in range(depth):
