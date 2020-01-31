@@ -349,7 +349,7 @@ class BatchednDimensionTree:
     def __init__(self, in_coords, width, level):
         self.w = 0.0
         self.coords = in_coords
-        self.coord = [0.0 for x in range(len(in_coords))]
+        self.coord = [0.0 for x in range(len(in_coords[0]))]
         self.width = width
         self.lvl = level
         self.num_children = 2**len(self.coord)
