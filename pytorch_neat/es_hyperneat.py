@@ -145,11 +145,16 @@ class ESNetwork:
             # this allows us to search from +- midpoints on each axis of the input coord
             p.divide_childrens()
             out_coords = []
-            weights = query_torch_cppn_tensors(p.coords, p.child_coords, outgoing, self.cppn, self.max_weight)
-            print(weights.shape)
-            print(weights)
-            if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth and self.variance(p) > self.division_threshold):
-                q.append(p.child_tree)
+            p.child_tree.w = query_torch_cppn_tensors(p.coords, p.child_coords, outgoing, self.cppn, self.max_weight)
+            print(p.child_tree.w[: ,0] * 0.0)
+            if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth):
+                low_var_count = 0
+                for x in range(len(p.coords)):
+                    if(torch.var(p.child_tree.w[: ,x]) < self.division_threshold):
+                        p.child_tree.w[: ,x] = p.child_tree.w[: ,x] * 0.0
+                        low_var_count += 1
+                if low_var_count != len(p.coords): 
+                    q.append(p.child_tree)
         return root
 
     # n-dimensional pruning and extradition
@@ -344,6 +349,7 @@ class nDimensionTree:
             newby = nDimensionTree(new_coord, self.width/2, self.lvl+1)
             self.child_coords.append(new_coord)
             self.cs.append(newby)
+
 class BatchednDimensionTree:
     
     def __init__(self, in_coords, width, level):
@@ -355,7 +361,6 @@ class BatchednDimensionTree:
         self.num_children = 2**len(self.coord)
         self.child_coords = []
         self.signs = self.set_signs()
-        #print(self.signs)
     def set_signs(self):
         return list(itertools.product([1,-1], repeat=len(self.coord)))
     
