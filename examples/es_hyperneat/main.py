@@ -36,11 +36,11 @@ def make_net(genome, config, bs):
             "max_weight": 3.0,
             "activation": "tanh"}
     input_cords = []
-    output_cords = [(0.0, -1.0, 0.0)]
+    output_cords = [(0.0, -1.0, -1.0)]
     sign = 1
     # we will use a 3 dimensional substrate, coords laid out here
-    for i in range(4):
-        input_cords.append((0.0 - i/10*sign, 1.0, 0.0))
+    for i in range(3):
+        input_cords.append((0.0 - i/10*sign, 1.0, 1.0))
         sign *= -1
     leaf_names = []
     for i in range(len(output_cords[0])):
