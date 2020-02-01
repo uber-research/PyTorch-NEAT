@@ -144,6 +144,7 @@ class ESNetwork:
     def division_initialization_nd_tensors(self, coords, outgoing):
         root = BatchednDimensionTree([0.0 for x in range(len(coords[0]))], 1.0, 1)
         q = [root]
+        print()
         while q:
             p = q.pop(0)
             # here we will subdivide to 2^coordlength as described above
@@ -156,17 +157,20 @@ class ESNetwork:
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth):
                 low_var_count = 0
                 for x in range(len(coords)):
-                    if(torch.var(p.w[: ,x]) < self.division_threshold):
-                        p.w[: ,x] = p.w[: ,x] * 0.0
+                    if(torch.var(weights[: ,x]) < self.division_threshold):
+                        weights[: ,x] = weights[: ,x] * 0.0
                         low_var_count += 1
                 if low_var_count != len(coords): 
-                    q.extend(p.cs)  
+                    for idx,c in enumerate(p.cs):
+                        c.w = weights[idx]
+                    q.extend(p.cs)
         return root
+
     def prune_all_the_tensors_aha(self, coords, p, outgoing):
         coord_len = len(coords[0])
         for c in p.cs:
-            #we literally just checked variance lmao, am i missing something
             if c.w.sum() != 0.0:
+                #print(c.w)
                 self.prune_all_the_tensors_aha(coords, c, outgoing)
             else:
                 # where the magic shall bappen
@@ -187,11 +191,14 @@ class ESNetwork:
                             query_coord.append(dimen2)
                             query_coord2.append(dimen)
                     tree_coords.append(query_coord)
-                    tree_coords_2.append(query_coord2)
-                # need to group outputs by dimension for band check
+                    tree_coords.append(query_coord2)
+                weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
+                #print(weights)
+                '''
                 minus_weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
                 plus_weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords_2, outgoing, self.cppn, self.max_weight))
-                return
+                '''
+        return
 
     # n-dimensional pruning and extradition
     def prune_all_the_dimensions(self, coord, p, outgoing):
@@ -274,8 +281,8 @@ class ESNetwork:
         hidden_nodes, unexplored_hidden_nodes = set(), set()
         connections1, connections2, connections3 = set(), set(), set()
         root = self.division_initialization_nd_tensors(inputs, True)
-        '''
         self.prune_all_the_tensors_aha(inputs, root, True)
+        '''
         connections1 = connections1.union(self.connections)
         self.connections = set()
         root = self.division_initialization_nd_tensors(unexplored_hidden_nodes, True)
