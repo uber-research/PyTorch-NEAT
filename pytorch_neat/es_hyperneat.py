@@ -188,7 +188,8 @@ class ESNetwork:
                             query_coord2.append(dimen)
                     tree_coords.append(query_coord)
                     tree_coords_2.append(query_coord2)
-                
+                minus_weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
+                plus_weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords_2, outgoing, self.cppn, self.max_weight))
                 return
 
     # n-dimensional pruning and extradition
