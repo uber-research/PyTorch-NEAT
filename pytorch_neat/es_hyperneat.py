@@ -144,7 +144,6 @@ class ESNetwork:
     def division_initialization_nd_tensors(self, coords, outgoing):
         root = BatchednDimensionTree([0.0 for x in range(len(coords[0]))], 1.0, 1)
         q = [root]
-        print()
         while q:
             p = q.pop(0)
             # here we will subdivide to 2^coordlength as described above
@@ -152,9 +151,6 @@ class ESNetwork:
             p.divide_childrens()
             out_coords = []
             weights = query_torch_cppn_tensors(coords, p.child_coords, outgoing, self.cppn, self.max_weight)
-            weights_single = query_torch_cppn_tensors([coords[0]], p.child_coords, outgoing, self.cppn, self.max_weight)
-            print(weights)
-            print(weights_single)
             for idx,c in enumerate(p.cs):
                 c.w = weights[idx]
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth):
@@ -172,35 +168,38 @@ class ESNetwork:
     def prune_all_the_tensors_aha(self, coords, p, outgoing):
         coord_len = len(coords[0])
         for c in p.cs:
+            '''
             if c.w.sum() != 0.0:
                 #print(c.w)
                 self.prune_all_the_tensors_aha(coords, c, outgoing)
             else:
-                # where the magic shall bappen
-                tree_coords = []
-                tree_coords_2 = []
-                child_array = []
-                sign = 1
-                for i in range(coord_len):
-                    query_coord = []
-                    query_coord2 = []
-                    dimen = c.coord[i] - p.width
-                    dimen2 = c.coord[i] + p.width
-                    for x in range(coord_len):
-                        if x != i:
-                            query_coord.append(c.coord[x])
-                            query_coord2.append(c.coord[x])
-                        else:
-                            query_coord.append(dimen2)
-                            query_coord2.append(dimen)
-                    tree_coords.append(query_coord)
-                    tree_coords.append(query_coord2)
-                weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
-                #print(weights)
-                '''
-                minus_weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
-                plus_weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords_2, outgoing, self.cppn, self.max_weight))
-                '''
+            '''
+            # where the magic shall bappen
+            tree_coords = []
+            tree_coords_2 = []
+            child_array = []
+            sign = 1
+            for i in range(coord_len):
+                query_coord = []
+                query_coord2 = []
+                dimen = c.coord[i] - p.width
+                dimen2 = c.coord[i] + p.width
+                for x in range(coord_len):
+                    if x != i:
+                        query_coord.append(c.coord[x])
+                        query_coord2.append(c.coord[x])
+                    else:
+                        query_coord.append(dimen2)
+                        query_coord2.append(dimen)
+                tree_coords.append(query_coord)
+                tree_coords.append(query_coord2)
+            weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
+            print(weights.shape)
+            #print(torch.reshape(weights[: ,0], [c.num_children, 2]))
+            '''
+            minus_weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
+            plus_weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords_2, outgoing, self.cppn, self.max_weight))
+            '''
         return
 
     # n-dimensional pruning and extradition
