@@ -152,6 +152,9 @@ class ESNetwork:
             p.divide_childrens()
             out_coords = []
             weights = query_torch_cppn_tensors(coords, p.child_coords, outgoing, self.cppn, self.max_weight)
+            weights_single = query_torch_cppn_tensors([coords[0]], p.child_coords, outgoing, self.cppn, self.max_weight)
+            print(weights)
+            print(weights_single)
             for idx,c in enumerate(p.cs):
                 c.w = weights[idx]
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth):
