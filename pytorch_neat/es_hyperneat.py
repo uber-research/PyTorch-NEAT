@@ -150,7 +150,9 @@ class ESNetwork:
             # this allows us to search from +- midpoints on each axis of the input coord
             p.divide_childrens()
             out_coords = []
-            p.w = query_torch_cppn_tensors(coords, p.child_coords, outgoing, self.cppn, self.max_weight)
+            weights = query_torch_cppn_tensors(coords, p.child_coords, outgoing, self.cppn, self.max_weight)
+            for idx,c in enumerate(p.cs):
+                c.w = weights[idx]
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth):
                 low_var_count = 0
                 for x in range(len(coords)):
@@ -160,22 +162,51 @@ class ESNetwork:
                 if low_var_count != len(coords): 
                     q.extend(p.cs)  
         return root
+    def prune_all_the_tensors_aha(self, coords, p, outgoing):
+        coord_len = len(coords[0])
+        for c in p.cs:
+            #we literally just checked variance lmao, am i missing something
+            if c.w.sum() != 0.0:
+                self.prune_all_the_tensors_aha(coords, c, outgoing)
+            else:
+                # where the magic shall bappen
+                tree_coords = []
+                tree_coords_2 = []
+                child_array = []
+                sign = 1
+                for i in range(coord_len):
+                    query_coord = []
+                    query_coord2 = []
+                    dimen = c.coord[i] - p.width
+                    dimen2 = c.coord[i] + p.width
+                    for x in range(coord_len):
+                        if x != i:
+                            query_coord.append(c.coord[x])
+                            query_coord2.append(c.coord[x])
+                        else:
+                            query_coord.append(dimen2)
+                            query_coord2.append(dimen)
+                    tree_coords.append(query_coord)
+                    tree_coords_2.append(query_coord2)
+                
+                return
 
     # n-dimensional pruning and extradition
     def prune_all_the_dimensions(self, coord, p, outgoing):
+        coord_len = len(coord)
         for c in p.cs:
             child_array = []
             if self.variance(c) > self.variance_threshold:
                 self.prune_all_the_dimensions(coord, c, outgoing)
             else:
-                c_len = len(child_array)
+                #c_len = len(child_array)
                 sign = 1
-                for i in range(len(c.coord)):
+                for i in range(coord_len):
                     query_coord = []
                     query_coord2 = []
                     dimen = c.coord[i] - p.width
                     dimen2 = c.coord[i] + p.width
-                    for x in range(len(coord)):
+                    for x in range(coord_len):
                         if x != i:
                             query_coord.append(c.coord[x])
                             query_coord2.append(c.coord[x])
@@ -241,8 +272,18 @@ class ESNetwork:
         hidden_nodes, unexplored_hidden_nodes = set(), set()
         connections1, connections2, connections3 = set(), set(), set()
         root = self.division_initialization_nd_tensors(inputs, True)
-
-
+        '''
+        self.prune_all_the_tensors_aha(inputs, root, True)
+        connections1 = connections1.union(self.connections)
+        self.connections = set()
+        root = self.division_initialization_nd_tensors(unexplored_hidden_nodes, True)
+        self.prune_all_the_tensors_aha(unexplored_hidden_nodes, root, True)
+        connections2 = connections2.union(self.connections)
+        root = self.division_initialization_nd_tensors(outputs, False)
+        self.prune_all_the_tensors_aha(outputs, root, False)
+        connections1 = connections2.union(self.connections)
+        connections = connections1.union(connections2.union(connections3))
+        '''
 
     def es_hyperneat(self):
         inputs = self.substrate.input_coordinates
@@ -364,7 +405,8 @@ class BatchednDimensionTree:
         self.num_children = 2**len(self.coord)
         self.child_coords = []
         self.cs = []
-        self.signs = self.set_signs()
+        self.signs = self.set_signs() 
+        self.child_weights = 0.0
     def set_signs(self):
         return list(itertools.product([1,-1], repeat=len(self.coord)))
     
