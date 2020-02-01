@@ -111,6 +111,11 @@ class ESNetwork:
         return torch.var(p.coords[ix])
     '''
 
+    @staticmethod
+    def get_weights_tensor(p):
+        weights = []
+        return
+
     def initialize_at_depth(self, depth=3):
         root_coord = []
         for s in range(depth):
@@ -137,7 +142,7 @@ class ESNetwork:
         return root
 
     def division_initialization_nd_tensors(self, coords, outgoing):
-        root = BatchednDimensionTree(coords, 1.0, 1)
+        root = BatchednDimensionTree([0.0 for x in range(len(coords[0]))], 1.0, 1)
         q = [root]
         while q:
             p = q.pop(0)
@@ -145,16 +150,15 @@ class ESNetwork:
             # this allows us to search from +- midpoints on each axis of the input coord
             p.divide_childrens()
             out_coords = []
-            p.child_tree.w = query_torch_cppn_tensors(p.coords, p.child_coords, outgoing, self.cppn, self.max_weight)
-            print(p.child_tree.w[: ,0] * 0.0)
+            p.w = query_torch_cppn_tensors(coords, p.child_coords, outgoing, self.cppn, self.max_weight)
             if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth):
                 low_var_count = 0
-                for x in range(len(p.coords)):
-                    if(torch.var(p.child_tree.w[: ,x]) < self.division_threshold):
-                        p.child_tree.w[: ,x] = p.child_tree.w[: ,x] * 0.0
+                for x in range(len(coords)):
+                    if(torch.var(p.w[: ,x]) < self.division_threshold):
+                        p.w[: ,x] = p.w[: ,x] * 0.0
                         low_var_count += 1
-                if low_var_count != len(p.coords): 
-                    q.append(p.child_tree)
+                if low_var_count != len(coords): 
+                    q.extend(p.cs)  
         return root
 
     # n-dimensional pruning and extradition
@@ -352,14 +356,14 @@ class nDimensionTree:
 
 class BatchednDimensionTree:
     
-    def __init__(self, in_coords, width, level):
+    def __init__(self, in_coord, width, level):
         self.w = 0.0
-        self.coords = in_coords
-        self.coord = [0.0 for x in range(len(in_coords[0]))]
+        self.coord = in_coord
         self.width = width
         self.lvl = level
         self.num_children = 2**len(self.coord)
         self.child_coords = []
+        self.cs = []
         self.signs = self.set_signs()
     def set_signs(self):
         return list(itertools.product([1,-1], repeat=len(self.coord)))
@@ -370,8 +374,8 @@ class BatchednDimensionTree:
             for y in range(len(self.coord)):
                 new_coord.append(self.coord[y] + (self.width/(2*self.signs[x][y])))
             self.child_coords.append(new_coord)
-        newby = nDimensionTree(self.child_coords, self.width/2, self.lvl+1)
-        self.child_tree = newby
+            newby = nDimensionTree(new_coord, self.width/2, self.lvl+1)
+            self.cs.append(newby)
     
 # new tree's corresponding connection structure
 class nd_Connection:
