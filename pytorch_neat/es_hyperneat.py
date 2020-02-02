@@ -165,6 +165,7 @@ class ESNetwork:
             tree_coords_2 = []
             child_array = []
             sign = 1
+            #gotta be a better way to accomplish this permutation
             for i in range(coord_len):
                 query_coord = []
                 query_coord2 = []
@@ -275,13 +276,16 @@ class ESNetwork:
     def es_hyperneat_nd_tensors(self):
         inputs = self.substrate.input_coordinates
         outputs = self.substrate.output_coordinates
-        hidden_nodes, unexplored_hidden_nodes = [], []
+        in_ids = [i for i,c in enumerate(inputs)]
+        output_ids = [i for i,c in enumerate(outputs)]
+        hidden_nodes, unexplored_hidden_nodes, hidden_ids = [], [], []
         connections1, connections2, connections3 = set(), set(), set()
         root = self.division_initialization_nd_tensors(inputs, True)
         self.prune_all_the_tensors_aha(inputs, root, True)
         connections1 = connections1.union(self.connections)
         for c in connections1:
             hidden_nodes.append(tuple(c.coord2))
+        hidden_ids.extend([i for i,c in enumerate(hidden_nodes)])
         self.connections = set()
         unexplored_hidden_nodes = copy.deepcopy(hidden_nodes)
         if(len(unexplored_hidden_nodes) != 0):
@@ -291,11 +295,10 @@ class ESNetwork:
             for c in connections2:
                 hidden_nodes.append(tuple(c.coord2))
             unexplored_hidden_nodes = set(unexplored_hidden_nodes)
-            unexplored_hidden_nodes -= set(hidden_nodes)
+            unexplored_hidden_nodes = set(hidden_nodes) - set(unexplored_hidden_nodes)
+            self.connections = set()
         root = self.division_initialization_nd_tensors(outputs, False)
         self.prune_all_the_tensors_aha(outputs, root, False)
-        connections1 = connections2.union(self.connections)
-        connections = connections1.union(connections2.union(connections3))
         return connections
 
 
