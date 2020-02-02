@@ -201,7 +201,7 @@ class ESNetwork:
                 if con is not None:
                     if not c.w[x] == 0.0:
                         self.connections.add(con)
-        print(self.connections)
+        #print(self.connections)
         return
 
     # n-dimensional pruning and extradition
@@ -296,14 +296,15 @@ class ESNetwork:
             root = self.division_initialization_nd_tensors(unexplored_hidden_nodes, True)
             self.prune_all_the_tensors_aha(unexplored_hidden_nodes, root, True)
             connections2 = connections2.union(self.connections)
-            for c connections2:
+            for c in connections2:
                 hidden_nodes.append(tuple(c.coord2))
-            unexplored_hidden_nodes -= hidden_nodes
+            unexplored_hidden_nodes = set(unexplored_hidden_nodes)
+            unexplored_hidden_nodes -= set(hidden_nodes)
         root = self.division_initialization_nd_tensors(outputs, False)
         self.prune_all_the_tensors_aha(outputs, root, False)
         connections1 = connections2.union(self.connections)
         connections = connections1.union(connections2.union(connections3))
-        return
+        return self.clean_n_dimensional(connections)
 
     def es_hyperneat(self):
         inputs = self.substrate.input_coordinates
@@ -340,7 +341,7 @@ class ESNetwork:
 
         connections = connections1.union(connections2.union(connections3))
 
-        return self.clean_net(connections)
+        return self.clean_n_dimensional(connections)
 
     # clean n dimensional net
     def clean_n_dimensional(self, connections):
@@ -357,7 +358,7 @@ class ESNetwork:
             for c in temp_input_connections:
                 if c.coord1 in connect_to_inputs:
                     connect_to_inputs.add(c.coord2)
-                    initial_input_connections.remove(c)
+                    initial_input_connections -= {c}
                     add_happened = True
         add_happened = True
         while add_happened:
@@ -366,7 +367,7 @@ class ESNetwork:
             for c in temp_output_connections:
                 if c.coord2 in connect_to_outputs:
                     connect_to_outputs.add(c.coord1)
-                    initial_output_connections.remove(c)
+                    initial_output_connections -= {c}
                     add_happened = True
         true_nodes = connect_to_inputs.intersection(connect_to_outputs)
         for c in connections:
