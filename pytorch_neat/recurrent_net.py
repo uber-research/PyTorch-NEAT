@@ -38,6 +38,10 @@ def dense_from_coo(shape, conns, dtype=torch.float64):
         weights, dtype=dtype)
     return mat
 
+def dense_from_substrate_coo(shape, conns, dtype=torch.float64):
+    mat = torch.zeros(shape, dtype=dtype)
+
+
 
 class RecurrentNet():
     def __init__(self, n_inputs, n_hidden, n_outputs,

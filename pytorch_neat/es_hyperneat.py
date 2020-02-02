@@ -115,14 +115,6 @@ class ESNetwork:
         weights = []
         return
 
-    def initialize_at_depth(self, depth=3):
-        root_coord = []
-        for s in range(depth):
-            root_coord.append(0.0)
-        
-        root = nDimensionTree(root_coord, 1.0, 1)
-        return root
-
     def division_initialization_nd(self, coord, outgoing):
         root = self.root_tree
         q = [root]
@@ -304,44 +296,8 @@ class ESNetwork:
         self.prune_all_the_tensors_aha(outputs, root, False)
         connections1 = connections2.union(self.connections)
         connections = connections1.union(connections2.union(connections3))
-        return self.clean_n_dimensional(connections)
+        return connections
 
-    def es_hyperneat(self):
-        inputs = self.substrate.input_coordinates
-        outputs = self.substrate.output_coordinates
-        hidden_nodes, unexplored_hidden_nodes = set(), set()
-        connections1, connections2, connections3 = set(), set(), set()        
-
-        for x, y in inputs:  # Explore from inputs.
-            root = self.division_initialization((x, y), True)
-            self.pruning_extraction((x, y), root, True)
-            connections1 = connections1.union(self.connections)
-            for c in connections1:
-                hidden_nodes.add((c.x2, c.y2))
-            self.connections = set()
-
-        unexplored_hidden_nodes = copy.deepcopy(hidden_nodes)
-        
-        for i in range(self.iteration_level):  # Explore from hidden.
-            for x, y in unexplored_hidden_nodes:
-                root = self.division_initialization((x, y), True)
-                self.pruning_extraction((x, y), root, True)
-                connections2 = connections2.union(self.connections)
-                for c in connections2:
-                    hidden_nodes.add((c.x2, c.y2))
-                self.connections = set()
-        
-        unexplored_hidden_nodes -= hidden_nodes
-
-        for x, y in outputs:  # Explore to outputs.
-            root = self.division_initialization((x, y), False)      
-            self.pruning_extraction((x, y), root, False)
-            connections3 = connections3.union(self.connections)
-            self.connections = set()
-
-        connections = connections1.union(connections2.union(connections3))
-
-        return self.clean_n_dimensional(connections)
 
     # clean n dimensional net
     def clean_n_dimensional(self, connections):
