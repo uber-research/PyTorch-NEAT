@@ -34,7 +34,6 @@ class ESNetwork:
     # creates phenotype with n dimensions
     def create_phenotype_network_nd(self, filename=None):
         self.es_hyperneat_nd_tensors()
-        return
         input_coordinates = self.substrate.input_coordinates
         output_coordinates = self.substrate.output_coordinates
 
@@ -284,16 +283,19 @@ class ESNetwork:
     def es_hyperneat_nd_tensors(self):
         inputs = self.substrate.input_coordinates
         outputs = self.substrate.output_coordinates
-        hidden_nodes, unexplored_hidden_nodes = set(), set()
+        hidden_nodes, unexplored_hidden_nodes = [], []
         connections1, connections2, connections3 = set(), set(), set()
         root = self.division_initialization_nd_tensors(inputs, True)
         self.prune_all_the_tensors_aha(inputs, root, True)
-        
         connections1 = connections1.union(self.connections)
+        for c in connections1:
+            hidden_nodes.append(tuple(c.coord2))
         self.connections = set()
-        root = self.division_initialization_nd_tensors(unexplored_hidden_nodes, True)
-        self.prune_all_the_tensors_aha(unexplored_hidden_nodes, root, True)
-        connections2 = connections2.union(self.connections)
+        unexplored_hidden_nodes = copy.deepcopy(hidden_nodes)
+        if(len(unexplored_hidden_nodes) != 0):
+            root = self.division_initialization_nd_tensors(unexplored_hidden_nodes, True)
+            self.prune_all_the_tensors_aha(unexplored_hidden_nodes, root, True)
+            connections2 = connections2.union(self.connections)
         root = self.division_initialization_nd_tensors(outputs, False)
         self.prune_all_the_tensors_aha(outputs, root, False)
         connections1 = connections2.union(self.connections)
