@@ -345,6 +345,7 @@ class ESNetwork:
 
     # clean n dimensional net
     def clean_n_dimensional(self, connections):
+        print("cleaning conns")
         connect_to_inputs = set(tuple(i) for i in self.substrate.input_coordinates)
         connect_to_outputs = set(tuple(i) for i in self.substrate.output_coordinates)
         true_connections = set()
@@ -374,6 +375,7 @@ class ESNetwork:
             if (c.coord1 in true_nodes) and (c.coord2 in true_nodes):
                 true_connections.add(c)
         true_nodes -= (set(self.substrate.input_coordinates).union(set(self.substrate.output_coordinates)))
+        print("cleaned")
         return true_nodes, true_connections
         
         
