@@ -28,9 +28,9 @@ def make_env():
 def make_net(genome, config, bs):
     #start by setting up a substrate for this bad cartpole boi
     params = {"initial_depth": 2,
-            "max_depth": 3,
-            "variance_threshold": 0.3,
-            "band_threshold": 0.3,
+            "max_depth": 4,
+            "variance_threshold": 0.03,
+            "band_threshold": 0.03,
             "iteration_level": 3,
             "division_threshold": 0.013,
             "max_weight": 3.0,

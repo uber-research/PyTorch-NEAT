@@ -167,13 +167,8 @@ class ESNetwork:
 
     def prune_all_the_tensors_aha(self, coords, p, outgoing):
         coord_len = len(coords[0])
+        num_coords = len(coords)
         for c in p.cs:
-            '''
-            if c.w.sum() != 0.0:
-                #print(c.w)
-                self.prune_all_the_tensors_aha(coords, c, outgoing)
-            else:
-            '''
             # where the magic shall bappen
             tree_coords = []
             tree_coords_2 = []
@@ -193,13 +188,21 @@ class ESNetwork:
                         query_coord2.append(dimen)
                 tree_coords.append(query_coord)
                 tree_coords.append(query_coord2)
+            con = None
             weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
-            print(weights.shape)
-            #print(torch.reshape(weights[: ,0], [c.num_children, 2]))
-            '''
-            minus_weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
-            plus_weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords_2, outgoing, self.cppn, self.max_weight))
-            '''
+            for x in range(num_coords):
+                # group each dimensional permutation for plus/minus offsets 
+                grouped = torch.reshape(weights[: ,x], [weights.shape[0] // 2, 2])
+                mins = torch.min(grouped, dim=1)
+                if( torch.max(mins[0]) > self.band_threshold):
+                    if outgoing:
+                        con = nd_Connection(coords[x], c.coord, c.w[x])
+                    else:
+                        con = nd_Connection(c.coord, coords[x], c.w[x])
+                if con is not None:
+                    if not c.w[x] == 0.0:
+                        self.connections.add(con)
+        print(self.connections)
         return
 
     # n-dimensional pruning and extradition
@@ -239,6 +242,7 @@ class ESNetwork:
                         con = nd_Connection(c.coord, coord, c.w)
                 if con is not None:
                     if not c.w == 0.0:
+                        print("adding conn")
                         self.connections.add(con)
 
     # Explores the hidden nodes and their connections.
@@ -284,7 +288,7 @@ class ESNetwork:
         connections1, connections2, connections3 = set(), set(), set()
         root = self.division_initialization_nd_tensors(inputs, True)
         self.prune_all_the_tensors_aha(inputs, root, True)
-        '''
+        
         connections1 = connections1.union(self.connections)
         self.connections = set()
         root = self.division_initialization_nd_tensors(unexplored_hidden_nodes, True)
@@ -294,7 +298,7 @@ class ESNetwork:
         self.prune_all_the_tensors_aha(outputs, root, False)
         connections1 = connections2.union(self.connections)
         connections = connections1.union(connections2.union(connections3))
-        '''
+        
 
     def es_hyperneat(self):
         inputs = self.substrate.input_coordinates
