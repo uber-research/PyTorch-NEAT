@@ -299,11 +299,10 @@ class ESNetwork:
             for c connections2:
                 hidden_nodes.append(tuple(c.coord2))
             unexplored_hidden_nodes -= hidden_nodes
-            if len(unexplored_hidden_nodes) > 0:
-                root = self.division_initialization_nd_tensors(outputs, False)
-                self.prune_all_the_tensors_aha(outputs, root, False)
-                connections1 = connections2.union(self.connections)
-                connections = connections1.union(connections2.union(connections3))
+        root = self.division_initialization_nd_tensors(outputs, False)
+        self.prune_all_the_tensors_aha(outputs, root, False)
+        connections1 = connections2.union(self.connections)
+        connections = connections1.union(connections2.union(connections3))
         return
 
     def es_hyperneat(self):
