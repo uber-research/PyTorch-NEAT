@@ -297,9 +297,11 @@ class ESNetwork:
             unexplored_hidden_nodes = set(unexplored_hidden_nodes)
             unexplored_hidden_nodes = set(hidden_nodes) - set(unexplored_hidden_nodes)
             self.connections = set()
+        hidden_count = len(hidden_ids)
+        hidden_ids.extend([hidden_count + i for i,c in enumerate(unexplored_hidden_nodes)])
         root = self.division_initialization_nd_tensors(outputs, False)
         self.prune_all_the_tensors_aha(outputs, root, False)
-        return connections
+        return self.connections
 
 
     # clean n dimensional net
