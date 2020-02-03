@@ -33,7 +33,24 @@ class ESNetwork:
 
     # creates phenotype with n dimensions
     def create_phenotype_network_nd(self, filename=None):
-        self.es_hyperneat_nd_tensors()
+        rnn_params = self.es_hyperneat_nd_tensors()
+        
+        return RecurrentNet(
+            n_inputs = rnn_params["n_inputs"],
+            n_outputs = rnn_params["n_outputs"],
+            n_hidden = rnn_params["n_hidden"],
+            output_to_hidden = rnn_params["output_to_hidden"],
+            output_to_output = rnn_params["output_to_output"],
+            hidden_to_hidden = rnn_params["hidden_to_hidden"],
+            input_to_hidden = rnn_params["input_to_hidden"],
+            input_to_output = rnn_params["input_to_output"],
+            hidden_to_output = rnn_params["hidden_to_output"],
+            hidden_responses = rnn_params["hidden_responses"],
+            output_responses = rnn_params["output_responses"],
+            hidden_biases = rnn_params["hidden_biases"],
+            output_biases = rnn_params["output_biases"]
+        )
+        '''
         input_coordinates = self.substrate.input_coordinates
         output_coordinates = self.substrate.output_coordinates
 
@@ -78,7 +95,7 @@ class ESNetwork:
             print("not today yeahhaaa")
                     
         return RecurrentNet.create_from_es(input_nodes, output_nodes, node_evals)
-        
+        '''
     # Create a RecurrentNetwork using the ES-HyperNEAT approach.
   
     # Recursively collect all weights for a given QuadPoint.
@@ -276,8 +293,7 @@ class ESNetwork:
     def es_hyperneat_nd_tensors(self):
         inputs = self.substrate.input_coordinates
         outputs = self.substrate.output_coordinates
-        in_ids = [i for i,c in enumerate(inputs)]
-        output_ids = [i for i,c in enumerate(outputs)]
+        hidden_full = []
         hidden_nodes, unexplored_hidden_nodes, hidden_ids = [], [], []
         connections1, connections2, connections3 = set(), set(), set()
         root = self.division_initialization_nd_tensors(inputs, True)
@@ -285,7 +301,7 @@ class ESNetwork:
         connections1 = connections1.union(self.connections)
         for c in connections1:
             hidden_nodes.append(tuple(c.coord2))
-        hidden_ids.extend([i for i,c in enumerate(hidden_nodes)])
+        hidden_full.extend([c for c in hidden_nodes])
         self.connections = set()
         unexplored_hidden_nodes = copy.deepcopy(hidden_nodes)
         if(len(unexplored_hidden_nodes) != 0):
@@ -297,13 +313,54 @@ class ESNetwork:
             unexplored_hidden_nodes = set(unexplored_hidden_nodes)
             unexplored_hidden_nodes = set(hidden_nodes) - set(unexplored_hidden_nodes)
             self.connections = set()
-        hidden_count = len(hidden_ids)
-        hidden_ids.extend([hidden_count + i for i,c in enumerate(unexplored_hidden_nodes)])
+        hidden_full.extend([c for c in unexplored_hidden_nodes])
         root = self.division_initialization_nd_tensors(outputs, False)
         self.prune_all_the_tensors_aha(outputs, root, False)
-        return self.connections
+        rnn_params = self.structure_for_rnn(hidden_full, connections1, connections2, connections3)
+        return rnn_params
+
+    def structure_for_rnn(self, hidden_node_coords, conns_1, conns_2, conns_3):
+        param_dict = {
+            "n_inputs": len(self.substrate.input_coordinates),
+            "n_outputs": len(self.substrate.output_coordinates),
+            "n_hidden": len(hidden_node_coords),
+            "hidden_responses": [1.0 for k in range(len(hidden_node_coords))],
+            "hidden_biases": [1.0 for k in range(len(hidden_node_coords))],
+            "output_responses": [1.0 for k in range(len(self.substrate.output_coordinates))],
+            "output_biases":  [1.0 for k in range(len(self.substrate.output_coordinates))],
+            "output_to_hidden": [],
+            "input_to_output": [],
+            "output_to_output": []
+        }
+        temp = []
+        for c in conns_1:
+            temp.append(tuple([
+                self.substrate.input_coordinates.index(c.coord1),
+                hidden_node_coords.index(c.coord2),
+                c.weight
+            ]))
+        param_dict["input_to_hidden"] = temp
+        temp = []
+        print(param_dict["input_to_hidden"])
+        for c in conns_2:
+            temp.append(tuple([
+                hidden_node_coords.index(c.coord1),
+                hidden_node_coords.index(c.coord2),
+                c.weight
+            ]))
+        param_dict["hidden_to_hidden"] = temp
+        temp = []
+        for c in conns_3:
+            temp.append(tuple([
+                hidden_node_coords.index(c.coord2),
+                self.substrate.output_coordinates.index(c.coord1),
+                c.weight
+            ]))
+        param_dict["hidden_to_output"] = temp
+        return param_dict
 
 
+        
     # clean n dimensional net
     def clean_n_dimensional(self, connections):
         print("cleaning conns")
