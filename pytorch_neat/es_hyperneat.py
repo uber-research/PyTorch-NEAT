@@ -332,31 +332,32 @@ class ESNetwork:
             "input_to_output": [],
             "output_to_output": []
         }
-        temp = []
+        temp_nodes = []
+        temp_weights = []
         for c in conns_1:
-            temp.append(tuple([
+            temp_nodes.append((
                 self.substrate.input_coordinates.index(c.coord1),
-                hidden_node_coords.index(c.coord2),
-                c.weight
-            ]))
-        param_dict["input_to_hidden"] = temp
-        temp = []
+                hidden_node_coords.index(c.coord2)
+            ))
+            temp_weights.append(c.weight)
+        param_dict["input_to_hidden"] = tuple([temp_nodes, temp_weights])
+        temp_nodes, temp_weights = [], []
         print(param_dict["input_to_hidden"])
         for c in conns_2:
-            temp.append(tuple([
+            temp_nodes.append((
                 hidden_node_coords.index(c.coord1),
-                hidden_node_coords.index(c.coord2),
-                c.weight
-            ]))
-        param_dict["hidden_to_hidden"] = temp
-        temp = []
+                hidden_node_coords.index(c.coord2)
+            ))
+            temp_weights.append(c.weight)
+        param_dict["hidden_to_hidden"] = tuple([temp_nodes, temp_weights])
+        temp_nodes, temp_weights = [], []
         for c in conns_3:
-            temp.append(tuple([
+            temp_nodes.append((
                 hidden_node_coords.index(c.coord2),
-                self.substrate.output_coordinates.index(c.coord1),
-                c.weight
-            ]))
-        param_dict["hidden_to_output"] = temp
+                self.substrate.output_coordinates.index(c.coord1)
+            ))
+            temp_weights.append(c.weight)
+        param_dict["hidden_to_output"] = tuple([temp_nodes, temp_weights])
         return param_dict
 
 
