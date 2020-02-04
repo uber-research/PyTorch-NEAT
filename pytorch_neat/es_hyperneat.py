@@ -332,6 +332,7 @@ class ESNetwork:
             "input_to_output": [],
             "output_to_output": []
         }
+        print(param_dict["n_inputs"], param_dict["n_hidden"])
         temp_nodes = []
         temp_weights = []
         for c in conns_1:
@@ -341,6 +342,7 @@ class ESNetwork:
             ))
             temp_weights.append(c.weight)
         param_dict["input_to_hidden"] = tuple([temp_nodes, temp_weights])
+        print(temp_nodes, temp_weights)
         temp_nodes, temp_weights = [], []
         print(param_dict["input_to_hidden"])
         for c in conns_2:
