@@ -30,15 +30,18 @@ import json
 
 def dense_from_coo(shape, conns, dtype=torch.float64):
     mat = torch.zeros(shape, dtype=dtype)
+    print(mat)
     print(conns)
     idxs, weights = conns
     if len(idxs) == 0:
         return mat
     rows, cols = np.array(idxs).transpose()
-    print(rows, cols)
-    print(weights)
-    mat[torch.LongTensor(rows), torch.LongTensor(cols)] = torch.tensor(
+    #print(torch.LongTensor(rows), torch.LongTensor(cols).shape)
+    w = torch.tensor(
         weights, dtype=dtype)
+    print(w.shape)
+    print(w)
+    mat[torch.LongTensor(rows), torch.LongTensor(cols)] = w
     return mat
 
 class RecurrentNet():
