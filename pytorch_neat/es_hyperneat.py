@@ -328,9 +328,9 @@ class ESNetwork:
             "hidden_biases": [1.0 for k in range(len(hidden_node_coords))],
             "output_responses": [1.0 for k in range(len(self.substrate.output_coordinates))],
             "output_biases":  [1.0 for k in range(len(self.substrate.output_coordinates))],
-            "output_to_hidden": [],
-            "input_to_output": [],
-            "output_to_output": []
+            "output_to_hidden": ([], []),
+            "input_to_output": ([],[]),
+            "output_to_output": ([],[])
         }
         print(param_dict["n_inputs"], param_dict["n_hidden"])
         temp_nodes = []
@@ -360,6 +360,7 @@ class ESNetwork:
             ))
             temp_weights.append(c.weight)
         param_dict["hidden_to_output"] = tuple([temp_nodes, temp_weights])
+        print(param_dict["n_hidden"])
         return param_dict
 
 
