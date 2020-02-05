@@ -178,39 +178,42 @@ class ESNetwork:
         num_coords = len(coords)
         for c in p.cs:
             # where the magic shall bappen
-            tree_coords = []
-            tree_coords_2 = []
-            child_array = []
-            sign = 1
-            #gotta be a better way to accomplish this permutation
-            for i in range(coord_len):
-                query_coord = []
-                query_coord2 = []
-                dimen = c.coord[i] - p.width
-                dimen2 = c.coord[i] + p.width
-                for x in range(coord_len):
-                    if x != i:
-                        query_coord.append(c.coord[x])
-                        query_coord2.append(c.coord[x])
-                    else:
-                        query_coord.append(dimen2)
-                        query_coord2.append(dimen)
-                tree_coords.append(query_coord)
-                tree_coords.append(query_coord2)
-            con = None
-            weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
-            for x in range(num_coords):
-                # group each dimensional permutation for plus/minus offsets 
-                grouped = torch.reshape(weights[: ,x], [weights.shape[0] // 2, 2])
-                mins = torch.min(grouped, dim=1)
-                if( torch.max(mins[0]) > self.band_threshold):
-                    if outgoing:
-                        con = nd_Connection(coords[x], c.coord, c.w[x])
-                    else:
-                        con = nd_Connection(c.coord, coords[x], c.w[x])
-                if con is not None:
-                    if not c.w[x] == 0.0:
-                        self.connections.add(con)
+            if torch.sum(c.w) != 0.0:
+                self.prune_all_the_tensors_aha(coords, p, outgoing)
+            else:
+                tree_coords = []
+                tree_coords_2 = []
+                child_array = []
+                sign = 1
+                #gotta be a better way to accomplish this permutation
+                for i in range(coord_len):
+                    query_coord = []
+                    query_coord2 = []
+                    dimen = c.coord[i] - p.width
+                    dimen2 = c.coord[i] + p.width
+                    for x in range(coord_len):
+                        if x != i:
+                            query_coord.append(c.coord[x])
+                            query_coord2.append(c.coord[x])
+                        else:
+                            query_coord.append(dimen2)
+                            query_coord2.append(dimen)
+                    tree_coords.append(query_coord)
+                    tree_coords.append(query_coord2)
+                con = None
+                weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
+                for x in range(num_coords):
+                    # group each dimensional permutation for plus/minus offsets 
+                    grouped = torch.reshape(weights[: ,x], [weights.shape[0] // 2, 2])
+                    mins = torch.min(grouped, dim=1)
+                    if( torch.max(mins[0]) > self.band_threshold):
+                        if outgoing:
+                            con = nd_Connection(coords[x], c.coord, c.w[x])
+                        else:
+                            con = nd_Connection(c.coord, coords[x], c.w[x])
+                    if con is not None:
+                        if not c.w[x] == 0.0:
+                            self.connections.add(con)
         #print(self.connections)
         return
 
