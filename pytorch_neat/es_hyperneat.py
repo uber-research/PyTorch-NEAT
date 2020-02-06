@@ -160,19 +160,16 @@ class ESNetwork:
             out_coords = []
             weights = query_torch_cppn_tensors(coords, p.child_coords, outgoing, self.cppn, self.max_weight)
             #print(weights)
-            if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth):
-                low_var_count = 0
-                for x in range(len(coords)):
-                    if(torch.var(weights[: ,x]) < self.division_threshold):
-                        #print(torch.var(weights[: ,x]))
-                        print(self.division_threshold)
-                        weights[: ,x] = weights[: ,x] * 0.0
-                        low_var_count += 1 
-                for idx,c in enumerate(p.cs):
-                    c.w = weights[idx]
-                if low_var_count != len(coords):
+            low_var_count = 0
+            for x in range(len(coords)):
+                if(torch.var(weights[: ,x]) < self.division_threshold):
+                    #print(torch.var(weights[: ,x]))
+                    weights[: ,x] = weights[: ,x] * 0.0
+                    low_var_count += 1 
+            for idx,c in enumerate(p.cs):
+                c.w = weights[idx]
+            if (p.lvl < self.initial_depth) or (p.lvl < self.max_depth and low_var_count != len(coords)):
                     q.extend(p.cs)
-                    print(q)
         return root
 
     def prune_all_the_tensors_aha(self, coords, p, outgoing):
@@ -180,40 +177,42 @@ class ESNetwork:
         num_coords = len(coords)
         for c in p.cs:
             # where the magic shall bappen
-
-            tree_coords = []
-            tree_coords_2 = []
-            child_array = []
-            sign = 1
-            #gotta be a better way to accomplish this permutation
-            for i in range(coord_len):
-                query_coord = []
-                query_coord2 = []
-                dimen = c.coord[i] - p.width
-                dimen2 = c.coord[i] + p.width
-                for x in range(coord_len):
-                    if x != i:
-                        query_coord.append(c.coord[x])
-                        query_coord2.append(c.coord[x])
-                    else:
-                        query_coord.append(dimen2)
-                        query_coord2.append(dimen)
-                tree_coords.append(query_coord)
-                tree_coords.append(query_coord2)
-            con = None
-            weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
-            for x in range(num_coords):
-                # group each dimensional permutation for plus/minus offsets 
-                grouped = torch.reshape(weights[: ,x], [weights.shape[0] // 2, 2])
-                mins = torch.min(grouped, dim=1)
-                if( torch.max(mins[0]) > self.band_threshold):
-                    if outgoing:
-                        con = nd_Connection(coords[x], c.coord, c.w[x])
-                    else:
-                        con = nd_Connection(c.coord, coords[x], c.w[x])
-                if con is not None:
-                    if not c.w[x] == 0.0:
-                        self.connections.add(con)
+            if (torch.sum(c.w) != 0.0):
+                self.prune_all_the_tensors_aha(coords, c, outgoing)
+            else:
+                tree_coords = []
+                tree_coords_2 = []
+                child_array = []
+                sign = 1
+                #gotta be a better way to accomplish this permutation
+                for i in range(coord_len):
+                    query_coord = []
+                    query_coord2 = []
+                    dimen = c.coord[i] - p.width
+                    dimen2 = c.coord[i] + p.width
+                    for x in range(coord_len):
+                        if x != i:
+                            query_coord.append(c.coord[x])
+                            query_coord2.append(c.coord[x])
+                        else:
+                            query_coord.append(dimen2)
+                            query_coord2.append(dimen)
+                    tree_coords.append(query_coord)
+                    tree_coords.append(query_coord2)
+                con = None
+                weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
+                for x in range(num_coords):
+                    # group each dimensional permutation for plus/minus offsets 
+                    grouped = torch.reshape(weights[: ,x], [weights.shape[0] // 2, 2])
+                    mins = torch.min(grouped, dim=1)
+                    if( torch.max(mins[0]) > self.band_threshold):
+                        if outgoing:
+                            con = nd_Connection(coords[x], c.coord, c.w[x])
+                        else:
+                            con = nd_Connection(c.coord, coords[x], c.w[x])
+                    if con is not None:
+                        if not c.w[x] == 0.0:
+                            self.connections.add(con)
         #print(self.connections)
         return
 
@@ -324,15 +323,15 @@ class ESNetwork:
 
     def structure_for_rnn(self, hidden_node_coords, conns_1, conns_2, conns_3):
         #print(len(conns_1))
-        print(conns_1)
+        #print(conns_1)
         param_dict = {
             "n_inputs": len(self.substrate.input_coordinates),
             "n_outputs": len(self.substrate.output_coordinates),
             "n_hidden": len(hidden_node_coords),
             "hidden_responses": [1.0 for k in range(len(hidden_node_coords))],
             "hidden_biases": [1.0 for k in range(len(hidden_node_coords))],
-            "output_responses": [1.0 for k in range(len(self.substrate.output_coordinates))],
-            "output_biases":  [1.0 for k in range(len(self.substrate.output_coordinates))],
+            "output_responses": [0.0 for k in range(len(self.substrate.output_coordinates))],
+            "output_biases":  [0.0 for k in range(len(self.substrate.output_coordinates))],
             "output_to_hidden": ([], []),
             "input_to_output": ([],[]),
             "output_to_output": ([],[])

@@ -28,9 +28,9 @@ def make_env():
 def make_net(genome, config, bs):
     #start by setting up a substrate for this bad cartpole boi
     params = {"initial_depth": 2,
-            "max_depth": 4,
+            "max_depth": 3,
             "variance_threshold": 0.03,
-            "band_threshold": 0.5,
+            "band_threshold": 0.05,
             "iteration_level": 3,
             "division_threshold": 0.03,
             "max_weight": 30.0,
@@ -40,7 +40,7 @@ def make_net(genome, config, bs):
     sign = 1
     # we will use a 3 dimensional substrate, coords laid out here
     for i in range(4):
-        input_cords.append((0.0 - i/10*sign, 1.0, 1.0))
+        input_cords.append((0.0 - i/10*sign, 0.0, 0.0))
         sign *= -1
     leaf_names = []
     for i in range(len(output_cords[0])):
@@ -54,6 +54,7 @@ def make_net(genome, config, bs):
 
 def activate_net(net, states):
     outputs = net.activate(states).numpy()
+    print(outputs)
     return outputs[0] > 0.5
 
 
