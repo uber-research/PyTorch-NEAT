@@ -29,7 +29,7 @@ def make_net(genome, config, bs):
     #start by setting up a substrate for this bad cartpole boi
     params = {"initial_depth": 2,
             "max_depth": 3,
-            "variance_threshold": 0.03,
+            "variance_threshold": 0.3,
             "band_threshold": 0.05,
             "iteration_level": 3,
             "division_threshold": 0.03,
@@ -54,7 +54,7 @@ def make_net(genome, config, bs):
 
 def activate_net(net, states):
     outputs = net.activate(states).numpy()
-    print(outputs)
+    #print(outputs)
     return outputs[0] > 0.5
 
 

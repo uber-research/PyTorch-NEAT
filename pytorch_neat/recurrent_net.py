@@ -76,8 +76,8 @@ class RecurrentNet():
 
         if n_hidden > 0:
             self.hidden_responses = torch.tensor(hidden_responses, dtype=dtype)
+            #print(hidden_responses)
             self.hidden_biases = torch.tensor(hidden_biases, dtype=dtype)
-
         self.output_responses = torch.tensor(
             output_responses, dtype=dtype)
         self.output_biases = torch.tensor(output_biases, dtype=dtype)
@@ -104,7 +104,7 @@ class RecurrentNet():
             activs_for_output = self.activs
             if self.n_hidden > 0:
                 for _ in range(self.n_internal_steps):
-                    self.activs = self.activation((
+                    self.activs = self.activation(self.hidden_responses * (
                         self.input_to_hidden.mm(inputs.t()).t() +
                         self.hidden_to_hidden.mm(self.activs.t()).t() +
                         self.output_to_hidden.mm(self.outputs.t()).t()) +

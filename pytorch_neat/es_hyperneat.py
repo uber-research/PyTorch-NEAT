@@ -164,7 +164,7 @@ class ESNetwork:
             for x in range(len(coords)):
                 if(torch.var(weights[: ,x]) < self.division_threshold):
                     #print(torch.var(weights[: ,x]))
-                    weights[: ,x] = weights[: ,x] * 0.0
+                    #weights[: ,x] = weights[: ,x] * 0.0
                     low_var_count += 1 
             for idx,c in enumerate(p.cs):
                 c.w = weights[idx]
@@ -177,7 +177,7 @@ class ESNetwork:
         num_coords = len(coords)
         for c in p.cs:
             # where the magic shall bappen
-            if (torch.sum(c.w) != 0.0):
+            if(torch.var(c.w) >= self.variance_threshold):
                 self.prune_all_the_tensors_aha(coords, c, outgoing)
             else:
                 tree_coords = []
@@ -203,15 +203,19 @@ class ESNetwork:
                 weights = abs(c.w - query_torch_cppn_tensors(coords, tree_coords, outgoing, self.cppn, self.max_weight))
                 for x in range(num_coords):
                     # group each dimensional permutation for plus/minus offsets 
+                    #print(weights[:,x])
                     grouped = torch.reshape(weights[: ,x], [weights.shape[0] // 2, 2])
                     mins = torch.min(grouped, dim=1)
+                    #print("mins: ")
+                    #print(mins[0])
                     if( torch.max(mins[0]) > self.band_threshold):
                         if outgoing:
                             con = nd_Connection(coords[x], c.coord, c.w[x])
                         else:
                             con = nd_Connection(c.coord, coords[x], c.w[x])
                     if con is not None:
-                        if not c.w[x] == 0.0:
+                        #print(con.weight)
+                        if not con.weight == 0.0:
                             self.connections.add(con)
         #print(self.connections)
         return
@@ -301,6 +305,7 @@ class ESNetwork:
         root = self.division_initialization_nd_tensors(inputs, True)
         self.prune_all_the_tensors_aha(inputs, root, True)
         connections1 = connections1.union(self.connections)
+        #print(connections1)
         for c in connections1:
             hidden_nodes.append(tuple(c.coord2))
         hidden_full.extend([c for c in hidden_nodes])
@@ -318,6 +323,7 @@ class ESNetwork:
         hidden_full.extend([c for c in unexplored_hidden_nodes])
         root = self.division_initialization_nd_tensors(outputs, False)
         self.prune_all_the_tensors_aha(outputs, root, False)
+        #print(connections1, connections2, connections3)
         rnn_params = self.structure_for_rnn(hidden_full, connections1, connections2, connections3)
         return rnn_params
 
@@ -328,15 +334,14 @@ class ESNetwork:
             "n_inputs": len(self.substrate.input_coordinates),
             "n_outputs": len(self.substrate.output_coordinates),
             "n_hidden": len(hidden_node_coords),
-            "hidden_responses": [1.0 for k in range(len(hidden_node_coords))],
-            "hidden_biases": [1.0 for k in range(len(hidden_node_coords))],
-            "output_responses": [0.0 for k in range(len(self.substrate.output_coordinates))],
-            "output_biases":  [0.0 for k in range(len(self.substrate.output_coordinates))],
+            "hidden_responses": [1.0],
+            "hidden_biases": [0.0],
+            "output_responses": [1.0],
+            "output_biases":  [0.0],
             "output_to_hidden": ([], []),
             "input_to_output": ([],[]),
             "output_to_output": ([],[])
         }
-        #print(param_dict["n_inputs"], param_dict["n_hidden"])
         temp_nodes = []
         temp_weights = []
         for c in conns_1:
