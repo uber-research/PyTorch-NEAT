@@ -217,7 +217,8 @@ class ESNetwork:
                         #print(con.weight)
                         if not con.weight == 0.0:
                             self.connections.add(con)
-        #print(self.connections)
+        if outgoing == False:
+            print(self.connections)
         return
 
     # n-dimensional pruning and extradition
