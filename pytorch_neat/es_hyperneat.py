@@ -328,8 +328,6 @@ class ESNetwork:
         return rnn_params
 
     def structure_for_rnn(self, hidden_node_coords, conns_1, conns_2, conns_3):
-        #print(len(conns_1))
-        print(conns_3)
         param_dict = {
             "n_inputs": len(self.substrate.input_coordinates),
             "n_outputs": len(self.substrate.output_coordinates),
@@ -364,8 +362,8 @@ class ESNetwork:
         temp_nodes, temp_weights = [], []
         for c in conns_3:
             temp_nodes.append((
-                hidden_node_coords.index(c.coord1),
-                self.substrate.output_coordinates.index(c.coord2)
+                self.substrate.output_coordinates.index(c.coord2),
+                hidden_node_coords.index(c.coord1)
             ))
             temp_weights.append(c.weight)
         param_dict["hidden_to_output"] = tuple([temp_nodes, temp_weights])
