@@ -317,13 +317,18 @@ class ESNetwork:
             for c in connections2:
                 hidden_nodes.append(tuple(c.coord2))
             unexplored_hidden_nodes = set(unexplored_hidden_nodes)
-            unexplored_hidden_nodes = set(hidden_nodes) - set(unexplored_hidden_nodes)
+            unexplored_hidden_nodes = set(hidden_nodes) - unexplored_hidden_nodes
             self.connections = set()
         hidden_full.extend([c for c in unexplored_hidden_nodes])
         root = self.division_initialization_nd_tensors(outputs, False)
         self.prune_all_the_tensors_aha(outputs, root, False)
         #print(connections1, connections2, connections3)
         connections3 = connections3.union(self.connections)
+        temp = []
+        for c in connections3:
+            if(c.coord1 in hidden_full):
+                temp.append(c)
+        connections3 = set(temp)
         rnn_params = self.structure_for_rnn(hidden_full, connections1, connections2, connections3)
         return rnn_params
 
@@ -369,83 +374,7 @@ class ESNetwork:
         param_dict["hidden_to_output"] = tuple([temp_nodes, temp_weights])
         return param_dict
 
-
-        
-    # clean n dimensional net
-    def clean_n_dimensional(self, connections):
-        print("cleaning conns")
-        connect_to_inputs = set(tuple(i) for i in self.substrate.input_coordinates)
-        connect_to_outputs = set(tuple(i) for i in self.substrate.output_coordinates)
-        true_connections = set()
-        initial_input_connections = copy.deepcopy(connections)
-        initial_output_connections = copy.deepcopy(connections)
-        
-        add_happened = True
-        while add_happened:
-            add_happened = False
-            temp_input_connections = copy.deepcopy(initial_input_connections)
-            for c in temp_input_connections:
-                if c.coord1 in connect_to_inputs:
-                    connect_to_inputs.add(c.coord2)
-                    initial_input_connections -= {c}
-                    add_happened = True
-        add_happened = True
-        while add_happened:
-            add_happened = False
-            temp_output_connections = copy.deepcopy(initial_output_connections)
-            for c in temp_output_connections:
-                if c.coord2 in connect_to_outputs:
-                    connect_to_outputs.add(c.coord1)
-                    initial_output_connections -= {c}
-                    add_happened = True
-        true_nodes = connect_to_inputs.intersection(connect_to_outputs)
-        for c in connections:
-            if (c.coord1 in true_nodes) and (c.coord2 in true_nodes):
-                true_connections.add(c)
-        true_nodes -= (set(self.substrate.input_coordinates).union(set(self.substrate.output_coordinates)))
-        print("cleaned")
-        return true_nodes, true_connections
-        
-        
-    # Clean a net for dangling connections by intersecting paths from input nodes with paths to output.
-
-
-# Class representing an area in the quadtree defined by a center coordinate and the distance to the edges of the area. 
-class QuadPoint:
-
-    def __init__(self, x, y, width, lvl):
-        self.x = x
-        self.y = y
-        self.w = 0.0
-        self.width = width
-        self.cs = [None] * 4
-        self.lvl = lvl
-
-#
-class nDimensionTree:
-    
-    def __init__(self, in_coord, width, level):
-        self.w = 0.0
-        self.coord = in_coord
-        self.width = width
-        self.lvl = level
-        self.num_children = 2**len(self.coord)
-        self.cs = []
-        self.child_coords = []
-        self.signs = self.set_signs()
-        #print(self.signs)
-    def set_signs(self):
-        return list(itertools.product([1,-1], repeat=len(self.coord)))
-    
-    def divide_childrens(self):
-        for x in range(self.num_children):
-            new_coord = []
-            for y in range(len(self.coord)):
-                new_coord.append(self.coord[y] + (self.width/(2*self.signs[x][y])))
-            newby = nDimensionTree(new_coord, self.width/2, self.lvl+1)
-            self.child_coords.append(new_coord)
-            self.cs.append(newby)
-
+# a tree that subdivides n dimensional euclidean spaces
 class BatchednDimensionTree:
     
     def __init__(self, in_coord, width, level):
@@ -485,75 +414,8 @@ class nd_Connection:
         return self.coords == other.coords
     def __hash__(self):
         return hash(self.coords + (self.weight,))
-# Class representing a connection from one point to another with a certain weight.
-class Connection:
-    
-    def __init__(self, x1, y1, x2, y2, weight):
-        self.x1 = x1
-        self.y1 = y1
-        self.x2 = x2
-        self.y2 = y2
-        self.weight = weight
-
-    # Below is needed for use in set.
-    def __eq__(self,other):
-        return self.x1, self.y1, self.x2, self.y2 == other.x1, other.y1, other.x2, other.y2
-
-    def __hash__(self):
-        return hash((self.x1, self.y1, self.x2, self.y2, self.weight))
-
-
-# From a given point, query the cppn for weights to all other points. This can be visualized as a connectivity pattern.
-def find_pattern(cppn, coord, res=60, max_weight=5.0):
-    im = np.zeros((res, res))
-
-    for x2 in range(res):
-        for y2 in range(res):
-
-            x2_scaled = -1.0 + (x2/float(res))*2.0 
-            y2_scaled = -1.0 + (y2/float(res))*2.0
-            
-            i = [coord[0], coord[1], x2_scaled, y2_scaled, 1.0]
-            n = cppn.activate(i)[0]
-
-            im[x2][y2] = n * max_weight
-
-    return im
-
-def query_torch_cppn(coord1, coord2, outgoing, cppn, max_weight=5.0):
-    result = 0.0
-    num_dimen = len(coord1)
-    master = {}
-    for x in range(num_dimen):
-        if(outgoing):
-            master["leaf_one_"+str(x)] = np.array(coord1[x])
-            master["leaf_two_"+str(x)] = np.array(coord2[x])
-        else:
-            master["leaf_one_"+str(x)] = np.array(coord2[x])
-            master["leaf_two_"+str(x)] = np.array(coord1[x])
-    #master = np.array(master)
-    activs = cppn(master)
-    print(activs)
-    w = float(activs[0])
-    print(w)
-    
-    if abs(w) > 0.2:  # If abs(weight) is below threshold, treat weight as 0.0.
-        return w * max_weight
-    else:
-        return 0.0
 
 def query_torch_cppn_tensors(coords_in, coords_out, outgoing, cppn, max_weight=5.0):
     inputs = get_nd_coord_inputs(coords_in, coords_out)
-    '''
-    for x in range(num_dimen):
-        if(outgoing):
-            master["leaf_one_"+str(x)] = np.array(coord1[x])
-            master["leaf_two_"+str(x)] = np.array(coord2[x])
-        else:
-            master["leaf_one_"+str(x)] = np.array(coord2[x])
-            master["leaf_two_"+str(x)] = np.array(coord1[x])
-    '''
-    #master = np.array(master)
     activs = cppn(inputs)
-    #print("weights", activs)
     return activs
