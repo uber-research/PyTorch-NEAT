@@ -65,7 +65,6 @@ class RecurrentNet():
                 (n_hidden, n_inputs), input_to_hidden, dtype=dtype)
             self.hidden_to_hidden = dense_from_coo(
                 (n_hidden, n_hidden), hidden_to_hidden, dtype=dtype)
-            #print(hidden_to_hidden)
             self.output_to_hidden = dense_from_coo(
                 (n_hidden, n_outputs), output_to_hidden, dtype=dtype)
             self.hidden_to_output = dense_from_coo(
@@ -77,7 +76,6 @@ class RecurrentNet():
 
         if n_hidden > 0:
             self.hidden_responses = torch.tensor(hidden_responses, dtype=dtype)
-            #print(hidden_responses)
             self.hidden_biases = torch.tensor(hidden_biases, dtype=dtype)
         self.output_responses = torch.tensor(
             output_responses, dtype=dtype)
