@@ -368,10 +368,7 @@ class ESNetwork:
                 self.substrate.output_coordinates.index(c.coord2)
             ))
             temp_weights.append(c.weight)
-        #print(temp_weights)
         param_dict["hidden_to_output"] = tuple([temp_nodes, temp_weights])
-        #print(param_dict["n_hidden"])
-        #print(param_dict)
         return param_dict
 
 
