@@ -28,7 +28,6 @@ class ESNetwork:
         self.width = len(substrate.output_coordinates)
         self.root_x = self.width/2
         self.root_y = (len(substrate.input_coordinates)/self.width)/2
-        self.root_tree = nDimensionTree((0.0, 0.0, 0.0), 1.0, 1)
 
 
     # creates phenotype with n dimensions
@@ -222,7 +221,7 @@ class BatchednDimensionTree:
             for y in range(len(self.coord)):
                 new_coord.append(self.coord[y] + (self.width/(2*self.signs[x][y])))
             self.child_coords.append(new_coord)
-            newby = nDimensionTree(new_coord, self.width/2, self.lvl+1)
+            newby = BatchednDimensionTree(new_coord, self.width/2, self.lvl+1)
             self.cs.append(newby)
     
 # new tree's corresponding connection structure
