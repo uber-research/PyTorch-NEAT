@@ -323,12 +323,13 @@ class ESNetwork:
         root = self.division_initialization_nd_tensors(outputs, False)
         self.prune_all_the_tensors_aha(outputs, root, False)
         #print(connections1, connections2, connections3)
+        connections3 = connections3.union(self.connections)
         rnn_params = self.structure_for_rnn(hidden_full, connections1, connections2, connections3)
         return rnn_params
 
     def structure_for_rnn(self, hidden_node_coords, conns_1, conns_2, conns_3):
         #print(len(conns_1))
-        #print(conns_1)
+        print(conns_3)
         param_dict = {
             "n_inputs": len(self.substrate.input_coordinates),
             "n_outputs": len(self.substrate.output_coordinates),
@@ -363,10 +364,11 @@ class ESNetwork:
         temp_nodes, temp_weights = [], []
         for c in conns_3:
             temp_nodes.append((
-                self.substrate.output_coordinates.index(c.coord1),
-                hidden_node_coords.index(c.coord2)
+                hidden_node_coords.index(c.coord1),
+                self.substrate.output_coordinates.index(c.coord2)
             ))
             temp_weights.append(c.weight)
+        #print(temp_weights)
         param_dict["hidden_to_output"] = tuple([temp_nodes, temp_weights])
         #print(param_dict["n_hidden"])
         #print(param_dict)

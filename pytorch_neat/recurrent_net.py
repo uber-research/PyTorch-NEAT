@@ -65,6 +65,7 @@ class RecurrentNet():
                 (n_hidden, n_inputs), input_to_hidden, dtype=dtype)
             self.hidden_to_hidden = dense_from_coo(
                 (n_hidden, n_hidden), hidden_to_hidden, dtype=dtype)
+            #print(hidden_to_hidden)
             self.output_to_hidden = dense_from_coo(
                 (n_hidden, n_outputs), output_to_hidden, dtype=dtype)
             self.hidden_to_output = dense_from_coo(
