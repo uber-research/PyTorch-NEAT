@@ -14,7 +14,7 @@
 
 import torch
 import numpy as np
-from .activations import sigmoid_activation
+from .activations import str_to_activation, sigmoid_activation
 import json
 
 # def sparse_mat(shape, conns):
@@ -47,7 +47,7 @@ class RecurrentNet():
                  hidden_biases, output_biases,
                  batch_size=1,
                  use_current_activs=False,
-                 activation=sigmoid_activation,
+                 activation=str_to_activation["sigmoid"],
                  n_internal_steps=1,
                  dtype=torch.float64):
 

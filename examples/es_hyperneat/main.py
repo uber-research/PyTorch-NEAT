@@ -27,14 +27,14 @@ def make_env():
 
 def make_net(genome, config, bs):
     #start by setting up a substrate for this bad cartpole boi
-    params = {"initial_depth": 2,
-            "max_depth": 3,
+    params = {"initial_depth": 1,
+            "max_depth": 2,
             "variance_threshold": 0.8,
             "band_threshold": 0.05,
             "iteration_level": 3,
             "division_threshold": 0.3,
-            "max_weight": 30.0,
-            "activation": "sigmoid"}
+            "max_weight": 3.0,
+            "activation": "tanh"}
     input_cords = []
     output_cords = [(0.0, -1.0, -1.0)]
     sign = 1

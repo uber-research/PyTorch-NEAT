@@ -48,16 +48,21 @@ def make_net(genome, config, _batch_size):
 
 
 def activate_net(net, states, debug=False, step_num=0):
+    '''
     if debug and step_num == 1:
         print("\n" + "=" * 20 + " DEBUG " + "=" * 20)
         print(net.delta_w_node)
         print("W init: ", net.input_to_output[0])
+    '''
     outputs = net.activate(states).numpy()
+    #print(outputs)
+    '''
     if debug and (step_num - 1) % 100 == 0:
         print("\nStep {}".format(step_num - 1))
         print("Outputs: ", outputs[0])
         print("Delta W: ", net.delta_w[0])
         print("W: ", net.input_to_output[0])
+    '''
     return np.argmax(outputs, axis=1)
 
 

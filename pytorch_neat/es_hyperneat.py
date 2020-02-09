@@ -64,8 +64,6 @@ class ESNetwork:
             low_var_count = 0
             for x in range(len(coords)):
                 if(torch.var(weights[: ,x]) < self.division_threshold):
-                    #print(torch.var(weights[: ,x]))
-                    #weights[: ,x] = weights[: ,x] * 0.0
                     low_var_count += 1 
             for idx,c in enumerate(p.cs):
                 c.w = weights[idx]

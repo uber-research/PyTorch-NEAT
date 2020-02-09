@@ -33,16 +33,16 @@ DEBUG = True
 
 
 def make_net(genome, config, _batch_size):
-    params = {"initial_depth": 2,
+    params = {"initial_depth": 1,
             "max_depth": 3,
-            "variance_threshold": 0.8,
+            "variance_threshold": 0.08,
             "band_threshold": 0.05,
             "iteration_level": 3,
-            "division_threshold": 0.3,
-            "max_weight": 30.0,
+            "division_threshold": 0.03,
+            "max_weight": 3.0,
             "activation": "tanh"}
-    input_cords = [[-1.0, 1.0, 0.0], [-.5, 1.0, 0.0], [.5, 1.0, 0.0], [1.0, 1.0, 0.0]]
-    output_cords = [[-1.0, -1.0, -1.0], [0.0, -1.0, -1.0], [1.0, -1.0, -1.0]]
+    input_cords = [(-1.0, 1.0, 0.0), (-.5, 1.0, 0.0), (.5, 1.0, 0.0), (1.0, 1.0, 0.0)]
+    output_cords = [(-1.0, -1.0, -1.0), (0.0, -1.0, -1.0), (1.0, -1.0, -1.0)]
     leaf_names = []
     for i in range(len(output_cords[0])):
         leaf_names.append(str(i) + "_in")
@@ -53,16 +53,9 @@ def make_net(genome, config, _batch_size):
     return net
 
 def activate_net(net, states, debug=False, step_num=0):
-    if debug and step_num == 1:
-        print("\n" + "=" * 20 + " DEBUG " + "=" * 20)
-        print(net.delta_w_node)
-        print("W init: ", net.input_to_output[0])
+    print(states[0])
     outputs = net.activate(states).numpy()
-    if debug and (step_num - 1) % 100 == 0:
-        print("\nStep {}".format(step_num - 1))
-        print("Outputs: ", outputs[0])
-        print("Delta W: ", net.delta_w[0])
-        print("W: ", net.input_to_output[0])
+    #print(outputs)
     return np.argmax(outputs, axis=1)
 
 
@@ -72,7 +65,7 @@ def activate_net(net, states, debug=False, step_num=0):
 def run(n_generations, n_processes):
     # Load the config file, which is assumed to live in
     # the same directory as this script.
-    config_path = os.path.join(os.path.dirname(__file__), "neat.cfg")
+    config_path = os.path.join(os.path.dirname(__file__), "tmaze.cfg")
     config = neat.Config(
         neat.DefaultGenome,
         neat.DefaultReproduction,
