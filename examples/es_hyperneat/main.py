@@ -29,10 +29,10 @@ def make_net(genome, config, bs):
     #start by setting up a substrate for this bad cartpole boi
     params = {"initial_depth": 2,
             "max_depth": 3,
-            "variance_threshold": 0.3,
+            "variance_threshold": 0.8,
             "band_threshold": 0.05,
             "iteration_level": 3,
-            "division_threshold": 0.03,
+            "division_threshold": 0.3,
             "max_weight": 30.0,
             "activation": "sigmoid"}
     input_cords = []
