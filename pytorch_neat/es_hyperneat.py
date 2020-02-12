@@ -120,6 +120,7 @@ class ESNetwork:
             
     def es_hyperneat_nd_tensors(self):
         inputs = self.substrate.input_coordinates
+        #print(inputs)
         outputs = self.substrate.output_coordinates
         hidden_full = []
         hidden_nodes, unexplored_hidden_nodes, hidden_ids = [], [], []
@@ -152,6 +153,7 @@ class ESNetwork:
             if(c.coord1 in hidden_full):
                 temp.append(c)
         connections3 = set(temp)
+        self.connections = set()
         rnn_params = self.structure_for_rnn(hidden_full, connections1, connections2, connections3)
         return rnn_params
 
@@ -171,6 +173,7 @@ class ESNetwork:
         temp_nodes = []
         temp_weights = []
         for c in conns_1:
+            #print(c.coord1, c.coord2)
             temp_nodes.append((
                 hidden_node_coords.index(c.coord2),
                 self.substrate.input_coordinates.index(c.coord1)

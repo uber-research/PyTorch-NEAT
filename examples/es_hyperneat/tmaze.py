@@ -34,12 +34,12 @@ DEBUG = True
 
 def make_net(genome, config, _batch_size):
     params = {"initial_depth": 1,
-            "max_depth": 3,
-            "variance_threshold": 0.08,
+            "max_depth": 2,
+            "variance_threshold": 0.8,
             "band_threshold": 0.05,
             "iteration_level": 3,
-            "division_threshold": 0.03,
-            "max_weight": 3.0,
+            "division_threshold": 0.3,
+            "max_weight": 30.0,
             "activation": "tanh"}
     input_cords = [(-1.0, 1.0, 0.0), (-.5, 1.0, 0.0), (.5, 1.0, 0.0), (1.0, 1.0, 0.0)]
     output_cords = [(-1.0, -1.0, -1.0), (0.0, -1.0, -1.0), (1.0, -1.0, -1.0)]
@@ -49,10 +49,11 @@ def make_net(genome, config, _batch_size):
         leaf_names.append(str(i) + "_out")
     [cppn] = create_cppn(genome, config, leaf_names, ['cppn_out'])
     net_builder = ESNetwork(Substrate(input_cords, output_cords), cppn, params)
-    #net = net_builder.create_phenotype_network_nd('./genome_vis')
-    return net_builder
+    net = net_builder.create_phenotype_network_nd('./genome_vis')
+    return net
 
 def activate_net(net, states, debug=False, step_num=0):
+    '''
     net.substrate.input_coordinates = []
     adjust_input_coords = [[0.0, 0.0, 0.0] for x in range(4)]
     sign = 1
@@ -66,7 +67,8 @@ def activate_net(net, states, debug=False, step_num=0):
     net.substrate.input_coordinates = adjust_input_coords
     pheno = net.create_phenotype_network_nd('./genome_vis')
     outputs = pheno.activate(states).numpy()
-    #print(outputs)
+    '''
+    outputs = net.activate(states).numpy()
     return np.argmax(outputs, axis=1)
 
 
