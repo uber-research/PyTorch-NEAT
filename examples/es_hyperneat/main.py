@@ -6,7 +6,6 @@ import neat
 import gym
 # import torch
 import numpy as np
-import tensorflow as tf
 
 from pytorch_neat import t_maze
 from pytorch_neat.activations import tanh_activation

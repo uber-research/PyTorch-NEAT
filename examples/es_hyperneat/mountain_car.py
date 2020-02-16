@@ -7,8 +7,6 @@ import gym
 # import torch
 import numpy as np
 import tensorflow as tf
-
-from pytorch_neat import t_maze
 from pytorch_neat.activations import tanh_activation
 from pytorch_neat.adaptive_linear_net import AdaptiveLinearNet
 from pytorch_neat.multi_env_eval import MultiEnvEvaluator
@@ -23,7 +21,7 @@ max_env_steps = 200
 
 
 def make_env():
-    return gym.make("CartPole-v0")
+    return gym.make("MountainCar-v0")
 
 def make_net(genome, config, bs):
     #start by setting up a substrate for this bad cartpole boi

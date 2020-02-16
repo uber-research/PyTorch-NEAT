@@ -30,6 +30,8 @@ class ESNetwork:
         self.root_y = (len(substrate.input_coordinates)/self.width)/2
 
 
+    def reset_substrate(self, new_substrate):
+        self.substrate = new_substrate
     # creates phenotype with n dimensions
     def create_phenotype_network_nd(self, filename=None):
         rnn_params = self.es_hyperneat_nd_tensors()
