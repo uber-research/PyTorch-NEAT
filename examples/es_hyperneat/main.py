@@ -52,8 +52,8 @@ def make_net(genome, config, bs):
     return net
 
 def activate_net(net, states):
+    print(states)
     outputs = net.activate(states).numpy()
-    #print(outputs)
     return outputs[0] > 0.5
 
 

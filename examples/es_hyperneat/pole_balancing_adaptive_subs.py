@@ -28,11 +28,11 @@ def make_net(genome, config, bs):
     #start by setting up a substrate for this bad cartpole boi
     params = {"initial_depth": 1,
             "max_depth": 2,
-            "variance_threshold": 0.8,
-            "band_threshold": 0.05,
+            "variance_threshold": 0.55,
+            "band_threshold": 0.34,
             "iteration_level": 3,
-            "division_threshold": 0.3,
-            "max_weight": 3.0,
+            "division_threshold": 0.21,
+            "max_weight": 13.0,
             "activation": "tanh"}
     input_cords = []
     output_cords = [(0.0, -1.0, -1.0)]
@@ -48,11 +48,24 @@ def make_net(genome, config, bs):
 
     [cppn] = create_cppn(genome, config, leaf_names, ['cppn_out'])
     net_builder = ESNetwork(Substrate(input_cords, output_cords), cppn, params)
-    net = net_builder.create_phenotype_network_nd('./genome_vis')
-    return net
+    #net = net_builder.create_phenotype_network_nd('./genome_vis')
+    return net_builder
+
+def reset_substrate(states):
+    input_cords = []
+    output_cords = [(0.0, -1.0, -1.0)]
+    sign = -1
+    for i in range(4):
+        input_cords.append((0.0 - i/10*sign, 0.0, 0.0 + (states[i]/10)))
+        sign *= -1
+    return Substrate(input_cords, output_cords)
 
 def activate_net(net, states):
-    outputs = net.activate(states).numpy()
+    #print(states)
+    new_sub = reset_substrate(states[0])
+    net.reset_substrate(new_sub)
+    network = net.create_phenotype_network_nd() 
+    outputs = network.activate(states).numpy()
     #print(outputs)
     return outputs[0] > 0.5
 
