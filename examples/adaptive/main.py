@@ -54,8 +54,9 @@ def activate_net(net, states, debug=False, step_num=0):
         print(net.delta_w_node)
         print("W init: ", net.input_to_output[0])
     '''
+    print("inputs: ", states)
     outputs = net.activate(states).numpy()
-    #print(outputs)
+    print("outputs: ", outputs)
     '''
     if debug and (step_num - 1) % 100 == 0:
         print("\nStep {}".format(step_num - 1))

@@ -93,9 +93,11 @@ class Node:
             self.activs = self.activate(xs, shape)
         return self.activs
 
-    def __call__(self, inputs):
+    def __call__(self, **inputs):
         assert self.leaves is not None
         assert inputs
+        if "input_dict" in inputs:
+            inputs = inputs["input_dict"]
         shape = list(inputs.values())[0].shape
         self.reset()
         for name in self.leaves.keys():
