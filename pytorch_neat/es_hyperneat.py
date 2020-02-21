@@ -245,5 +245,5 @@ class nd_Connection:
 
 def query_torch_cppn_tensors(coords_in, coords_out, outgoing, cppn, max_weight=5.0):
     inputs = get_nd_coord_inputs(coords_in, coords_out)
-    activs = cppn(inputs)
+    activs = cppn(input_dict = inputs)
     return activs
