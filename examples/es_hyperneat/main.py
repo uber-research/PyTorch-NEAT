@@ -32,7 +32,7 @@ def make_net(genome, config, bs):
             "band_threshold": 0.05,
             "iteration_level": 3,
             "division_threshold": 0.3,
-            "max_weight": 3.0,
+            "max_weight": 34.0,
             "activation": "tanh"}
     input_cords = []
     output_cords = [(0.0, -1.0, -1.0)]
@@ -52,7 +52,6 @@ def make_net(genome, config, bs):
     return net
 
 def activate_net(net, states):
-    print(states)
     outputs = net.activate(states).numpy()
     return outputs[0] > 0.5
 
