@@ -247,6 +247,7 @@ def clamp_weights_(weights, weight_threshold=0.2, weight_max=3.0):
     weights[weights < -weight_max] = -weight_max
 
 
+
 def get_coord_inputs(in_coords, out_coords, batch_size=None):
     n_in = len(in_coords)
     n_out = len(out_coords)
@@ -278,7 +279,9 @@ def get_nd_coord_inputs(in_coords, out_coords, batch_size=None):
     n_out = len(out_coords)
     num_dimens = len(in_coords[0])
     dimen_arrays = {}
-
+    '''
+    TODO add batching support
+    
     if batch_size is not None:
         in_coords = in_coords.unsqueeze(0).expand(batch_size, n_in, 2)
         out_coords = out_coords.unsqueeze(0).expand(batch_size, n_out, 2)
@@ -288,7 +291,8 @@ def get_nd_coord_inputs(in_coords, out_coords, batch_size=None):
         x_in = in_coords[:, :, 0].unsqueeze(1).expand(batch_size, n_out, n_in)
         y_in = in_coords[:, :, 1].unsqueeze(1).expand(batch_size, n_out, n_in)
     else:
-        for x in range(num_dimens):
-            dimen_arrays[str(x) + "_out"] = out_coords[:, x].unsqueeze(1).expand(n_out, n_in) 
-            dimen_arrays[str(x) + "_in"] = in_coords[:, x].unsqueeze(0).expand(n_out, n_in)
+    '''
+    for x in range(num_dimens):
+        dimen_arrays[str(x) + "_out"] = out_coords[:, x].unsqueeze(1).expand(n_out, n_in) 
+        dimen_arrays[str(x) + "_in"] = in_coords[:, x].unsqueeze(0).expand(n_out, n_in)
     return dimen_arrays
