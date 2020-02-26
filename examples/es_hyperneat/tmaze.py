@@ -49,11 +49,10 @@ def make_net(genome, config, _batch_size):
         leaf_names.append(str(i) + "_out")
     [cppn] = create_cppn(genome, config, leaf_names, ['cppn_out'])
     net_builder = ESNetwork(Substrate(input_cords, output_cords), cppn, params)
-    net = net_builder.create_phenotype_network_nd('./genome_vis')
-    return net
+    #net = net_builder.create_phenotype_network_nd('./genome_vis')
+    return net_builder
 
 def activate_net(net, states, debug=False, step_num=0):
-    '''
     net.substrate.input_coordinates = []
     adjust_input_coords = [[0.0, 0.0, 0.0] for x in range(4)]
     sign = 1
@@ -67,8 +66,7 @@ def activate_net(net, states, debug=False, step_num=0):
     net.substrate.input_coordinates = adjust_input_coords
     pheno = net.create_phenotype_network_nd('./genome_vis')
     outputs = pheno.activate(states).numpy()
-    '''
-    outputs = net.activate(states).numpy()
+    #outputs = net.activate(states).numpy()
     return np.argmax(outputs, axis=1)
 
 
