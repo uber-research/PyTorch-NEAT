@@ -104,6 +104,8 @@ class AdaptiveLinearNet:
                 inputs, dtype=torch.float32, device=self.device
             ).unsqueeze(2)
 
+            if device == "cuda:0" : self.input_to_output = self.input_to_output.to(device) #additional for CUDA
+
             outputs = self.activation(self.input_to_output.matmul(inputs))
 
             input_activs = inputs.transpose(1, 2).expand(
@@ -128,8 +130,8 @@ class AdaptiveLinearNet:
             )
 
             self.delta_w = delta_w
-
-            self.input_to_output[self.w_expressed] += delta_w[self.w_expressed]
+  
+            self.input_to_output[self.w_expressed] += delta_w[self.w_expressed].to(device)
             clamp_weights_(
                 self.input_to_output, weight_threshold=0.0, weight_max=self.weight_max
             )
