@@ -18,7 +18,7 @@ import os
 import click
 import neat
 
-# import torch
+import torch
 import numpy as np
 
 from pytorch_neat import t_maze
@@ -29,6 +29,7 @@ from pytorch_neat.neat_reporter import LogReporter
 
 batch_size = 4
 DEBUG = True
+DEVICE = "cuda:0"
 
 
 def make_net(genome, config, _batch_size):
@@ -43,7 +44,7 @@ def make_net(genome, config, _batch_size):
         batch_size=batch_size,
         activation=tanh_activation,
         output_activation=tanh_activation,
-        device="cpu",
+        device=DEVICE,
     )
 
 
@@ -52,13 +53,13 @@ def activate_net(net, states, debug=False, step_num=0):
         print("\n" + "=" * 20 + " DEBUG " + "=" * 20)
         print(net.delta_w_node)
         print("W init: ", net.input_to_output[0])
-    outputs = net.activate(states).numpy()
+    outputs = net.activate(states).numpy() if DEVICE == "cpu" else net.activate(states)
     if debug and (step_num - 1) % 100 == 0:
         print("\nStep {}".format(step_num - 1))
         print("Outputs: ", outputs[0])
         print("Delta W: ", net.delta_w[0])
         print("W: ", net.input_to_output[0])
-    return np.argmax(outputs, axis=1)
+    return np.argmax(outputs, axis=1) if DEVICE == "cpu" else torch.argmax(outputs, dim=1)
 
 
 @click.command()

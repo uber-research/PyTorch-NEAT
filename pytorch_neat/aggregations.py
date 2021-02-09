@@ -17,11 +17,25 @@ from operator import mul
 
 
 def sum_aggregation(inputs):
-    return sum(inputs)
+    validatedInputs = []
+    try:
+        for tens in inputs:
+            tens.to("cuda:0")
+            validatedInputs.append(tens)
+    except Exception as e:
+        print(f"The following exeption occured: {str(e)}")
+    return sum(validatedInputs)
 
 
 def prod_aggregation(inputs):
-    return reduce(mul, inputs, 1)
+    validatedInputs = []
+    try:
+        for tens in inputs:
+            tens.to("cuda:0")
+            validatedInputs.append(tens) 
+    except Exception as e:
+        print(f"The following exeption occured: {str(e)}")
+    return reduce(mul, validatedInputs, 1)
 
 
 str_to_aggregation = {
